@@ -15,9 +15,10 @@ export default {
       // method: the name of the read method
       // sender: the from address for the transaction
       // args: the arguments for the method call
-      async callMethod(contract, instance, method, sender, args) {
+      async callMethod(contract, instance, method, sender, args, apiKey) {
         try {
-          const response = await this.methodPostHelper(contract, instance, method, sender, args);
+          const response = await this.methodPostHelper(contract, instance, method, sender, args,
+            apiKey);
           return response.data.result.output;
         } catch (e) {
           console.warn(e);
@@ -25,12 +26,13 @@ export default {
         return null;
       },
       // Sends an axios request to multibaas
-      async methodPostHelper(contract, instance, method, sender, args) {
+      async methodPostHelper(contract, instance, method, sender, args, apiKey) {
         return axios({
           method: 'POST',
           credentials: 'same-origin',
-          url: `http://localhost:3000/api/v0/chains/ethereum/addresses/${contract}/contracts/${instance}/methods/${method}`,
+          url: `http://localhost:8080/api/v0/chains/ethereum/addresses/${contract}/contracts/${instance}/methods/${method}`,
           data: { args: args || [], from: sender },
+          headers: { Authorization: `Bearer ${apiKey}` },
         });
       },
       // Send a write method to the blockchain.
@@ -40,9 +42,10 @@ export default {
       // sender: the from address for the transaction
       // args: the arguments for the method call
       // web3: a handle to the web3 instance
-      async sendMethod(contract, instance, method, sender, args, web3) {
+      async sendMethod(contract, instance, method, sender, args, apiKey, web3) {
         try {
-          const response = await this.methodPostHelper(contract, instance, method, sender, args);
+          const response = await this.methodPostHelper(contract, instance, method, sender, args,
+            apiKey);
 
           // Send transaction to Blockchain for POST requests only
           const { tx, submitted } = response.data.result;
