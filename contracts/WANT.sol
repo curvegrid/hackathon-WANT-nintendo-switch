@@ -1,106 +1,95 @@
 pragma solidity >=0.5.0 <0.6.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./erc20.sol";
+import "./pool.sol";
 
 
-contract WANT is WANTERC20 {
-    event Mint(
+contract WANT is WANTERC20, WANTPool {
+    /// @notice Deposits an amount of tokens into the WANT pool.
+    /// @param owner  The address of the owner
+    /// @param amount The amount of WANT tokens received from the deposit.
+    /// @param originalTokenAddress The original ERC20 token address.
+    /// @param tokenAmount The token amount deposited.
+    event Deposit(
         address indexed owner,
         uint256 amount,
         address indexed originalTokenAddress,
         uint256 tokenAmount
     );
-    event Burn(
+    /// @notice Claims a random token from the Pool.
+    /// @param owner  The address of the owner
+    /// @param amount The amount of WANT tokens used for claiming.
+    /// @param receivedTokenAddress The received ERC20 token address.
+    /// @param tokenAmount The token amount claimed.
+    event Claim(
         address indexed owner,
         uint256 amount,
         address indexed receivedTokenAddress,
         uint256 tokenAmount
     );
 
-    // For each token, how much do we have
-    struct ERC20Token {
-        address tokenAddress;
-        uint256 amount;
-    }
-    ERC20Token[] ownedTokenAmounts;
-    // Total amount of tokens we have
-    uint256 totalOwnedTokens;
-
-    // Mint token -- receives _amount tokens from _tokenAddress,
-    // returning the amount of WANT tokens the sender gets.
-    function mint(address _tokenAddress, uint256 _amount)
+    /// @notice Deposits _amount of _tokenAddress into the Pool. You receive the amount of WANT tokens returned.
+    function deposit(address _tokenAddress, uint256 _amount)
         public
-        returns (uint256)
+        returns (uint256 payout)
     {
-        // Collect the ERC20 token from the sender.
-        ERC20 targetToken = ERC20(_tokenAddress);
-        targetToken.transferFrom(msg.sender, address(this), _amount);
-
-        uint256 wantAmount = _mintAmount(msg.sender, _tokenAddress, _amount);
-        totalSupply += wantAmount;
-        balanceOf[msg.sender] += wantAmount;
-        totalOwnedTokens += _amount;
-        // Find out where the address is
-        bool found = false;
-        for (uint256 i = 0; i < ownedTokenAmounts.length; i++) {
-            ERC20Token storage v = ownedTokenAmounts[i];
-            if (_tokenAddress == v.tokenAddress) {
-                found = true;
-                v.amount += _amount;
-                break;
-            }
-        }
-        if (!found) {
-            ownedTokenAmounts.push(ERC20Token(_tokenAddress, _amount));
-        }
-        emit Mint(msg.sender, wantAmount, _tokenAddress, _amount);
-        return wantAmount;
+        return _depositFrom(msg.sender(), _tokenAddress, _amount);
     }
 
-    function burn()
-        public
-        returns (address _tokenAddress, uint256 _receivedAmount)
-    {
-        uint256 cost = _burnCost(msg.sender);
-        require(balanceOf[msg.sender] >= cost);
-        balanceOf[msg.sender] -= cost;
-
-        // Which of the tokens to return
-        uint256 target = random();
-        for (uint256 i = 0; i < ownedTokenAmounts.length; i++) {
-            ERC20Token storage v = ownedTokenAmounts[i];
-            if (v.amount >= target) {
-                ERC20 token = ERC20(v.tokenAddress);
-                token.transfer(msg.sender, 1);
-                v.amount--;
-
-                emit Burn(msg.sender, cost, v.tokenAddress, 1);
-
-                return (v.tokenAddress, 1);
-            }
-            target -= v.amount;
-        }
+    /// @notice Returns the claim cost of the next claim.
+    function claimCost() public view returns (uint256) {
+        return _claimCost(msg.sender());
     }
 
-    // How much does the minter get from "amount" of "token"
-    function _mintAmount(
-        address _minter,
+    /// @notice Burn [claimCost()] WANT tokens in exchange for a single random token in the pool.
+    function claim() public returns (address tokenAddress, uint256 amount) {
+        return _claimFrom(msg.sender());
+    }
+
+    /// @dev Deposits _amount of _tokenAddress from _address, giving _address the payout.
+    function _depositFrom(
+        address _address,
         address _tokenAddress,
         uint256 _amount
-    ) private view returns (uint256) {
-        return _amount;
+    ) private returns (uint256 payout) {
+        // Perform the ERC20 token transfer
+        IERC20 _token = IERC20(_tokenAddress);
+        _token.transferFrom(_address, address(this), _amount);
+
+        // Save the tokens into our pool
+        payout = _addTokenToPool(_tokenAddress, _amount);
+
+        // Mint the target WANT tokens
+        _mint(_address, payout);
+
+        // Fire the event
+        emit Deposit(_address, payout, _tokenAddress, _amount);
+
+        return payout;
     }
 
-    // How much does it cost to get a random token back?
-    function _burnCost(address _sender) private view returns (uint256) {
-        return 1;
-    }
+    /// @dev Process a claim from the given address.
+    function _claimFrom(address _address)
+        private
+        returns (address tokenAddress, uint256 amount)
+    {
+        uint256 _cost = _claimCost(_address);
 
-    // Get a random number, mod totalOwnedTokens;
-    function random() private view returns (uint256) {
-        return
-            uint256(
-                keccak256(abi.encodePacked(block.timestamp, block.difficulty))
-            ) % totalOwnedTokens;
+        // Burn the given amount of tokens
+        _burn(_address, _cost);
+
+        // Collect the token from the pool
+        (tokenAddress, amount) = _withdrawTokenFromPool();
+
+        // Perform ERC20 transfer from the token
+        IERC20 _token = IERC20(tokenAddress);
+        _token.transfer(_address, 1);
+
+        // Fire the event
+        emit Claim(_address, _cost, tokenAddress, amount);
+
+        // Return the claimed token
+        return (tokenAddress, amount);
     }
 }
