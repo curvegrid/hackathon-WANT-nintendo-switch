@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <img
-      alt="Vue logo"
+      alt="Woman with Ethereum Balloons"
       src="../assets/logo.png"
     >
     <HelloWorld msg="Welcome to Your Vue.js DApp" />
