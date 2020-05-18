@@ -1,8 +1,8 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./erc20.sol";
-import "./pool.sol";
+import "contracts/erc20.sol";
+import "contracts/pool.sol";
 
 
 contract WANT is WANTERC20, WANTPool {
@@ -34,17 +34,17 @@ contract WANT is WANTERC20, WANTPool {
         public
         returns (uint256 payout)
     {
-        return _depositFrom(msg.sender(), _tokenAddress, _amount);
+        return _depositFrom(msg.sender, _tokenAddress, _amount);
     }
 
     /// @notice Returns the claim cost of the next claim.
     function claimCost() public view returns (uint256) {
-        return _claimCost(msg.sender());
+        return _claimCost(msg.sender);
     }
 
     /// @notice Burn [claimCost()] WANT tokens in exchange for a single random token in the pool.
     function claim() public returns (address tokenAddress, uint256 amount) {
-        return _claimFrom(msg.sender());
+        return _claimFrom(msg.sender);
     }
 
     /// @dev Deposits _amount of _tokenAddress from _address, giving _address the payout.

@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "./erc20.sol";
+import "contracts/erc20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
