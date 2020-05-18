@@ -5,26 +5,44 @@
       color="primary"
       dark
     >
-      <div class="d-flex align-center">
-        <v-toolbar-title>
-          Token Pool Exchange
-        </v-toolbar-title>
-      </div>
+      <v-toolbar-items class="d-flex align-center">
+        <v-btn
+          href="/"
+          text
+        >
+          <v-toolbar-title>
+            Token Pool Exchange
+          </v-toolbar-title>
+        </v-btn>
+      </v-toolbar-items>
+      <v-spacer />
+      <v-toolbar-items class="d-flex align-center">
+        <v-btn
+          text
+          href="/about"
+        >
+          About
+        </v-btn>
+      </v-toolbar-items>
     </v-app-bar>
     <v-content>
-      <HelloWorld />
+      <v-container>
+        <v-card>
+          <v-container>
+            <router-view />
+          </v-container>
+        </v-card>
+      </v-container>
     </v-content>
   </v-app>
 </template>
 
 <script>
 import { ethers } from 'ethers';
-import HelloWorld from './components/HelloWorld.vue';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld,
   },
   data: () => ({
   }),
