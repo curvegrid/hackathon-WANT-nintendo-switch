@@ -38,6 +38,8 @@ contract WANTPool is WANTDecimals {
         internal
         returns (uint256 payout)
     {
+        _totalOwnedTokens.add(_amount);
+
         // Find and add the token
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             ERC20Token storage v = _ownedTokenAmounts[i];
