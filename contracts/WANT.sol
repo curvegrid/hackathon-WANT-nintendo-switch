@@ -1,6 +1,5 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "contracts/erc20.sol";
 import "contracts/pool.sol";
 
@@ -28,6 +27,13 @@ contract WANT is WANTERC20, WANTPool {
         address indexed receivedTokenAddress,
         uint256 tokenAmount
     );
+
+    /// @dev claimedToken shows the total claimed amount and cost of an ERC20 token
+    struct ClaimedToken {
+        address tokenAddress;
+        uint256 amount;
+        uint256 cost;
+    }
 
     /// @notice Deposits _amount of _tokenAddress into the Pool. You receive the amount of WANT tokens returned.
     function deposit(address _tokenAddress, uint256 _amount)
@@ -77,9 +83,7 @@ contract WANT is WANTERC20, WANTPool {
         returns (uint256 amount)
     {
         // claimedTokens represents the amount of claimed tokens for each ERC20 token
-        ERC20Token[] claimedTokens;
-        // totalClaimedTokens represents the amount of all claimed tokens
-        uint256 totalClaimedTokens = 0;
+        ClaimedToken[] memory claimedTokens = new ClaimedToken[](_getNumberOfTokens());
 
         for (uint256 i = 0; i < _amount; i++) {
             uint256 _cost = _claimCost(_address);
@@ -90,33 +94,33 @@ contract WANT is WANTERC20, WANTPool {
             // If there is no token in the pool, we stop with the withdraw
             if (totalOwnedTokens() == 0) break;
             // Collect the token from the pool
-            totalClaimedTokens = totalClaimedTokens.add(1);
-            (tokenAddress, amount) = _withdrawTokenFromPool();
+            amount = amount.add(1);
+            (address tokenAddress, uint256 claimedAmount) = _withdrawTokenFromPool();
 
             // check if the claimed token is already in claimedTokens list
             bool found = false;
             for (uint256 j = 0; j < claimedTokens.length; j++) {
                 if (claimedTokens[j].tokenAddress == tokenAddress) {
-                    claimedTokens[j].amount = claimedTokens[j].amount.add(amount);
+                    claimedTokens[j].amount = claimedTokens[j].amount.add(claimedAmount);
+                    claimedTokens[j].cost = claimedTokens[j].cost.add(_cost);
                     found = true;
                     break;
                 }
             }
-            // token not found, add a new ERC20Token to the list
-            if (!found) {
-                claimedTokens.push(ERC20Token(tokenAddress, amount));
-            }
+
+            // cannot find the token, this should not happen
+            assert(false);
         }
 
         // Perform ERC20 transfer for each ERC20 token claimed
-        for (uint256 i = 0; i < totalClaimedTokens.length; i++) {
-            IERC20 _token = IERC20(totalClaimedTokens[i].tokenAddress);
-            _token.transfer(_address, totalClaimedTokens[i].amount);
+        for (uint256 i = 0; i < claimedTokens.length; i++) {
+            IERC20 _token = IERC20(claimedTokens[i].tokenAddress);
+            _token.transfer(_address, claimedTokens[i].amount);
             // Fire the event
-            emit Claim(_address, _cost, tokenAddress, totalClaimedTokens[i].amount);
+            emit Claim(_address, claimedTokens[i].cost, claimedTokens[i].tokenAddress, claimedTokens[i].amount);
         }
 
         // Return the total amount of claimed tokens
-        return totalClaimedTokens;
+        return amount;
     }
 }

@@ -2,7 +2,7 @@ pragma solidity >=0.5.0 <0.6.0;
 
 import "contracts/erc20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol";
+import "contracts/UniswapV2Library.sol";
 
 /// @dev A uniswap router interface to find the addresses of WETH coin and uniswap's factory
 interface IUniswapV2Router01 {
@@ -41,7 +41,7 @@ contract WANTPool is WANTDecimals {
 
     /// @notice Returns the total amount of tokens we own.
     function totalOwnedTokens() public view returns (uint256 amount) {
-        uint256 amount = 0;
+        amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             amount.add(_ownedTokenAmounts[i].amount.div(_getOneTokenAmount(_ownedTokenAmounts[i].tokenAddress)));
         }
@@ -49,13 +49,17 @@ contract WANTPool is WANTDecimals {
     }
 
     /// @dev Returns the total amount of tokens we own before taking decimals into account
-    function _totalOwnedTokensWithoutDecimals() internal view returns (uint256) {
-        uint256 amount = 0;
+    function _totalOwnedTokensWithoutDecimals() internal view returns (uint256 amount) {
+        amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             amount.add(_ownedTokenAmounts[i].amount);
         }
         return amount;
 
+    }
+
+    function _getNumberOfTokens() internal view returns (uint256) {
+        return _ownedTokenAmounts.length;
     }
 
     /// @dev Add a token (with amount) to the pool, returning the amount of supposed payout.
@@ -100,7 +104,7 @@ contract WANTPool is WANTDecimals {
     }
 
     /// @dev How much does it cost to get a random token back?
-    function _claimCost(address _sender) internal view returns (uint256) {
+    function _claimCost(address _sender) internal pure returns (uint256) {
         return _oneWANTUnit;
     }
 
@@ -108,19 +112,19 @@ contract WANTPool is WANTDecimals {
     function _getUniswapReserves(address tokenAddress) internal view returns (uint256 reserveWETH, uint256 reserveToken) {
         address wethAddress = _router.WETH();
         address factory = _router.factory();
-        (reserveWETH, reserveToken) = tokenUniswapV2Library.getReserves(factory, wethAddress, tokenAddress);
+        (reserveWETH, reserveToken) = UniswapV2Library.getReserves(factory, wethAddress, tokenAddress);
         // we reject all tokens which cannot convert to WETH by Uniswap-v2
         require(reserveWETH > 0 && reserveToken > 0, "The deposited token is not supported");
     }
 
     /// @dev Return the amount of one token before taking decimals into account
-    function _getOneTokenAmount(address tokenAdress) internal view returns (uint256 amount) {
-        IERC20 _token = IERC20WithDecimals(TokenAddress);
+    function _getOneTokenAmount(address tokenAddress) internal pure returns (uint256 amount) {
+        IERC20WithDecimals _token = IERC20WithDecimals(tokenAddress);
         uint8 tokenDecimals = _token.decimals();
         // calculate 10^{tokenDecimals}
         uint256 pow10 = 1;
         for (uint256 i = 0; i < tokenDecimals; i++) {
-            pow10 = pow10.mul(pow10, 10);
+            pow10 = pow10.mul(10);
         }
         return pow10;
     }
@@ -129,12 +133,12 @@ contract WANTPool is WANTDecimals {
     function _depositPayout(ERC20Token storage _erc20Token, uint256 _amount)
         private
         view
-        returns (uint256)
+        returns (uint256 payout)
     {
-        (reserveWETH, reserveToken) = _getUniswapReserves(_erc20Token.tokenAddress);
+        (uint256 reserveWETH, uint256 reserveToken) = _getUniswapReserves(_erc20Token.tokenAddress);
 
-        uint256 returnAmount = 1;
-        // returnAmount = eth_relative_price * (1 - rarity) * amount_of_tokens * 200
+        payout = 1;
+        // payout = eth_relative_price * (1 - rarity) * amount_of_tokens * 200
         // in which, 200 is a constant to make one WANT token has an expected price of 1/200 ether,
         // eth_relative_price = reserveToken / reserveWETH is the token's relative price compared to WrappedETH
         // rarity = _erc20Token.amount / (totalOwnedTokens + _amount) is the rarity of the token in the pool
@@ -143,16 +147,16 @@ contract WANTPool is WANTDecimals {
         // nextTotal is the next amount of tokens in the pool before taking decimals into account
         uint256 nextTotal = _totalOwnedTokensWithoutDecimals().add(_amount);
 
-        returnAmount = returnAmount.mul(reserveToken);
-        returnAmount = returnAmount.mul(_sub(nextTotal, _erc20Token.amount));
-        returnAmount = returnAmount.mul(_amount);
-        returnAmount = returnAmount.mul(200);
+        payout = payout.mul(reserveToken);
+        payout = payout.mul(nextTotal.sub(_erc20Token.amount));
+        payout = payout.mul(_amount);
+        payout = payout.mul(200);
 
-        returnAmount = returnAmount.div(reserveWETH);
-        returnAmount = returnAmount.div(nextTotal);
-        returnAmount = returnAmount.div(_getOneTokenAmount(tokenAddress));
+        payout = payout.div(reserveWETH);
+        payout = payout.div(nextTotal);
+        payout = payout.div(_getOneTokenAmount(_erc20Token.tokenAddress));
 
-        return returnAmount;
+        return payout;
     }
 
     // Get a pseudorandom number, mod totalOwnedTokens;
