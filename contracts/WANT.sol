@@ -43,6 +43,7 @@ contract WANT is WANTERC20, WANTPool {
     }
 
     /// @notice Burn [claimCost()] WANT tokens in exchange for a single random token in the pool.
+    /// @notice Try to perform the withdraw [_amount] times
     function claim(uint256 _amount) public returns (uint256 amount) {
         return _claimFrom(msg.sender, _amount);
     }
@@ -86,23 +87,24 @@ contract WANT is WANTERC20, WANTPool {
             // Burn the given amount of tokens
             _burn(_address, _cost);
 
+            // If there is no token in the pool, we stop with the withdraw
+            if (totalOwnedTokens() == 0) break;
             // Collect the token from the pool
-            if (_totalOwnedTokens == 0) break;
             totalClaimedTokens = totalClaimedTokens.add(1);
-            tokenAddress = _withdrawTokenFromPool();
+            (tokenAddress, amount) = _withdrawTokenFromPool();
 
             // check if the claimed token is already in claimedTokens list
             bool found = false;
             for (uint256 j = 0; j < claimedTokens.length; j++) {
                 if (claimedTokens[j].tokenAddress == tokenAddress) {
-                    claimedTokens[j].amount = claimedTokens[j].amount.add(1);
+                    claimedTokens[j].amount = claimedTokens[j].amount.add(amount);
                     found = true;
                     break;
                 }
             }
-            // if the claimed token is not in the claimedTokens list, we add a new ERC20Token to the list
+            // token not found, add a new ERC20Token to the list
             if (!found) {
-                claimedTokens.push(ERC20Token(tokenAddress, 1));
+                claimedTokens.push(ERC20Token(tokenAddress, amount));
             }
         }
 
