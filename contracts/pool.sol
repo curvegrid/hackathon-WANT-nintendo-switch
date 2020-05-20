@@ -29,36 +29,39 @@ contract WANTPool is WANTDecimals {
     /// @dev uniswap router
     IUniswapV2Router01 _router = IUniswapV2Router01(0xf164fC0Ec4E93095b804a4795bBe1e041497b92a);
 
-    /// @notice Returns the amount of tokens we have as an array.
-    function ownedTokenAmount(uint256 index)
+    /// @notice Return the amount of a token in the pool
+    function ownedTokenAmount(address tokenAddress)
         public
         view
-        returns (address tokenAddress, uint256 amount)
+        returns (uint256 amount)
     {
-        ERC20Token storage v = _ownedTokenAmounts[index];
-        return (v.tokenAddress, v.amount.div(_getOneTokenAmount(v.tokenAddress)));
+        amount = 0;
+        for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
+            if (_ownedTokenAmounts[i].tokenAddress == tokenAddress) {
+                amount = _ownedTokenAmounts[i].amount;
+            }
+        }
     }
 
-    /// @notice Returns the total amount of tokens we own.
+    /// @notice Return the total amount of tokens we own.
     function totalOwnedTokens() public view returns (uint256 amount) {
         amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             amount.add(_ownedTokenAmounts[i].amount.div(_getOneTokenAmount(_ownedTokenAmounts[i].tokenAddress)));
         }
-        return amount;
     }
 
-    /// @dev Returns the total amount of tokens we own before taking decimals into account
+    /// @dev Return the total amount of tokens we own before taking decimals into account
     function _totalOwnedTokensWithoutDecimals() internal view returns (uint256 amount) {
         amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             amount.add(_ownedTokenAmounts[i].amount);
         }
-        return amount;
 
     }
 
-    function _getNumberOfTokens() internal view returns (uint256) {
+    /// @notice Get the number of distinct tokens in the pool
+    function NumberOfTokens() public view returns (uint256) {
         return _ownedTokenAmounts.length;
     }
 
@@ -71,17 +74,15 @@ contract WANTPool is WANTDecimals {
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             ERC20Token storage v = _ownedTokenAmounts[i];
             if (v.tokenAddress == _tokenAddress) {
+                payout = getPayout(_tokenAddress, _amount);
                 v.amount = v.amount.add(_amount);
-                return _depositPayout(v, _amount);
+                return payout;
             }
         }
         // Token not found: add it
+        payout = getPayout(_tokenAddress, _amount);
         _ownedTokenAmounts.push(ERC20Token(_tokenAddress, _amount));
-        return
-            _depositPayout(
-                _ownedTokenAmounts[_ownedTokenAmounts.length - 1],
-                _amount
-            );
+        return payout;
     }
 
     /// @dev Withdraw a single (random) token from the pool.
@@ -109,33 +110,44 @@ contract WANTPool is WANTDecimals {
     }
 
     /// @dev Return reserves of a uniswap pair of tokenAddress and WETH
-    function _getUniswapReserves(address tokenAddress) internal view returns (uint256 reserveWETH, uint256 reserveToken) {
+    function _getUniswapReserves(address _tokenAddress) internal view returns (uint256 reserveWETH, uint256 reserveToken) {
         address wethAddress = _router.WETH();
         address factory = _router.factory();
-        (reserveWETH, reserveToken) = UniswapV2Library.getReserves(factory, wethAddress, tokenAddress);
+        (reserveWETH, reserveToken) = UniswapV2Library.getReserves(factory, wethAddress, _tokenAddress);
         // we reject all tokens which cannot convert to WETH by Uniswap-v2
         require(reserveWETH > 0 && reserveToken > 0, "The deposited token is not supported");
     }
 
     /// @dev Return the amount of one token before taking decimals into account
-    function _getOneTokenAmount(address tokenAddress) internal pure returns (uint256 amount) {
-        IERC20WithDecimals _token = IERC20WithDecimals(tokenAddress);
+    function _getOneTokenAmount(address _tokenAddress) internal pure returns (uint256 amount) {
+        IERC20WithDecimals _token = IERC20WithDecimals(_tokenAddress);
         uint8 tokenDecimals = _token.decimals();
         // calculate 10^{tokenDecimals}
-        uint256 pow10 = 1;
+        amount = 1;
         for (uint256 i = 0; i < tokenDecimals; i++) {
-            pow10 = pow10.mul(10);
+            amount = amount.mul(10);
         }
-        return pow10;
+    }
+
+    /// @notice Return the expected number of WANT tokens received from a deposit
+    function getPayout(address tokenAddress, uint256 amount) public view returns (uint256 payout) {
+        // try to find the token from the pool list
+        for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
+            if (_ownedTokenAmounts[i].tokenAddress == tokenAddress) {
+                return _depositPayout(tokenAddress, _ownedTokenAmounts[i].amount, amount);
+            }
+        }
+        // not found, querying the payout with 0 as the current token amount in the pool
+        return _depositPayout(tokenAddress, 0, amount);
     }
 
     /// @dev How much does the minter get from "amount" of "token"
-    function _depositPayout(ERC20Token storage _erc20Token, uint256 _amount)
+    function _depositPayout(address _tokenAddress, uint256 _tokenAmount, uint256 _amount)
         private
         view
         returns (uint256 payout)
     {
-        (uint256 reserveWETH, uint256 reserveToken) = _getUniswapReserves(_erc20Token.tokenAddress);
+        (uint256 reserveWETH, uint256 reserveToken) = _getUniswapReserves(_tokenAddress);
 
         payout = 1;
         // payout = eth_relative_price * (1 - rarity) * amount_of_tokens * 200
@@ -148,18 +160,18 @@ contract WANTPool is WANTDecimals {
         uint256 nextTotal = _totalOwnedTokensWithoutDecimals().add(_amount);
 
         payout = payout.mul(reserveToken);
-        payout = payout.mul(nextTotal.sub(_erc20Token.amount));
+        payout = payout.mul(nextTotal.sub(_tokenAmount));
         payout = payout.mul(_amount);
         payout = payout.mul(200);
 
         payout = payout.div(reserveWETH);
         payout = payout.div(nextTotal);
-        payout = payout.div(_getOneTokenAmount(_erc20Token.tokenAddress));
+        payout = payout.div(_getOneTokenAmount(_tokenAddress));
 
         return payout;
     }
 
-    // Get a pseudorandom number, mod totalOwnedTokens;
+    /// @dev Get a pseudorandom number, mod totalOwnedTokens
     function _random() private view returns (uint256) {
         return
             uint256(

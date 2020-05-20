@@ -35,23 +35,23 @@ contract WANT is WANTERC20, WANTPool {
         uint256 cost;
     }
 
-    /// @notice Deposits _amount of _tokenAddress into the Pool. You receive the amount of WANT tokens returned.
-    function deposit(address _tokenAddress, uint256 _amount)
+    /// @notice Deposits amount of tokenAddress into the Pool. You receive the amount of WANT tokens returned.
+    function deposit(address tokenAddress, uint256 amount)
         public
         returns (uint256 payout)
     {
-        return _depositFrom(msg.sender, _tokenAddress, _amount);
+        return _depositFrom(msg.sender, tokenAddress, amount);
     }
 
     /// @notice Returns the claim cost of the next claim.
-    function claimCost() public view returns (uint256) {
+    function claimCost() public view returns (uint256 cost) {
         return _claimCost(msg.sender);
     }
 
     /// @notice Burn [claimCost()] WANT tokens in exchange for a single random token in the pool.
-    /// @notice Try to perform the withdraw [_amount] times
-    function claim(uint256 _amount) public returns (uint256 amount) {
-        return _claimFrom(msg.sender, _amount);
+    /// @notice Try to perform the withdraw [amount] times
+    function claim(uint256 amount) public returns (uint256 claimedAmount) {
+        return _claimFrom(msg.sender, amount);
     }
 
     /// @dev Deposits _amount of _tokenAddress from _address, giving _address the payout.
@@ -72,8 +72,6 @@ contract WANT is WANTERC20, WANTPool {
 
         // Fire the event
         emit Deposit(_address, payout, _tokenAddress, _amount);
-
-        return payout;
     }
 
     /// @dev Process a claim from the given address.
@@ -83,7 +81,7 @@ contract WANT is WANTERC20, WANTPool {
         returns (uint256 amount)
     {
         // claimedTokens represents the amount of claimed tokens for each ERC20 token
-        ClaimedToken[] memory claimedTokens = new ClaimedToken[](_getNumberOfTokens());
+        ClaimedToken[] memory claimedTokens = new ClaimedToken[](NumberOfTokens());
 
         for (uint256 i = 0; i < _amount; i++) {
             uint256 _cost = _claimCost(_address);
@@ -119,8 +117,5 @@ contract WANT is WANTERC20, WANTPool {
             // Fire the event
             emit Claim(_address, claimedTokens[i].cost, claimedTokens[i].tokenAddress, claimedTokens[i].amount);
         }
-
-        // Return the total amount of claimed tokens
-        return amount;
     }
 }
