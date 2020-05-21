@@ -27,11 +27,7 @@
     </v-app-bar>
     <v-content>
       <v-container>
-        <v-card>
-          <v-container>
-            <router-view />
-          </v-container>
-        </v-card>
+        <router-view />
       </v-container>
     </v-content>
   </v-app>

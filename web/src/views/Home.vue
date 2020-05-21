@@ -1,59 +1,64 @@
 <template>
-  <v-container>
-    <v-row class="text-center">
-      <v-col cols="12">
-        <v-img
-          :src="require('../assets/logo.svg')"
-          class="my-3"
-          contain
-          height="200"
-        />
-      </v-col>
-
-      <v-col
-        class="mb-4"
-        cols="12"
-      >
-        <v-tabs
-          v-model="tab"
-          background-color="primary lighten-1"
-          icons-and-text
-          centered
-          grow
-        >
-          <v-tab>
-            Deposit
-            <v-icon>account-balance</v-icon>
-          </v-tab>
-          <v-tab>
-            Redeem
-            <v-icon>local-play</v-icon>
-          </v-tab>
-        </v-tabs>
-
-        <v-tabs-items v-model="tab">
-          <v-tab-item
-            :key="0"
+  <div>
+    <v-container>
+      <v-row class="text-center">
+        <v-col cols="12">
+          <v-img
+            :src="require('../assets/logo.svg')"
+            class="my-3"
+            contain
+            height="200"
+          />
+        </v-col>
+      </v-row>
+      <v-card fluid>
+        <v-row class="text-center">
+          <v-col
+            class="mb-4"
+            cols="12"
           >
-            <v-card
-              flat
+            <v-tabs
+              v-model="tab"
+              background-color="primary lighten-1"
+              icons-and-text
+              centered
+              grow
             >
-              <deposit />
-            </v-card>
-          </v-tab-item>
-          <v-tab-item
-            :key="1"
-          >
-            <v-card
-              flat
-            >
-              <redeem />
-            </v-card>
-          </v-tab-item>
-        </v-tabs-items>
-      </v-col>
-    </v-row>
-  </v-container>
+              <v-tab>
+                Deposit
+                <v-icon>account-balance</v-icon>
+              </v-tab>
+              <v-tab>
+                Redeem
+                <v-icon>local-play</v-icon>
+              </v-tab>
+            </v-tabs>
+
+            <v-tabs-items v-model="tab">
+              <v-tab-item
+                :key="0"
+              >
+                <v-card
+                  flat
+                >
+                  <deposit />
+                </v-card>
+              </v-tab-item>
+              <v-tab-item
+                :key="1"
+              >
+                <v-card
+                  flat
+                >
+                  <redeem />
+                </v-card>
+              </v-tab-item>
+            </v-tabs-items>
+          </v-col>
+        </v-row>
+      </v-card>
+    </v-container>
+  </div>
 </template>
 
 <script>
