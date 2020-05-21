@@ -89,10 +89,16 @@ export default {
     sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
+  watch: {
+    tab() {
+      console.log('tab change');
+      this.$set(this.redeemStatus, 'successMessage', '');
+      this.$set(this.redeemStatus, 'errorMessage', '');
+    },
+  },
   created() {
     this.getTokenSupply();
     this.getTokenName();
-    console.log(this.tokenName);
 
     bus.$on('deposit', (address, amount) => this.deposit(address, amount));
     bus.$on('redeem', (amount) => this.redeem(amount));

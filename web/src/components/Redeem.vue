@@ -33,7 +33,7 @@
       </v-form>
     </v-container>
     <v-alert
-      v-if="success != ''"
+      v-if="successMessage != ''"
       type="success"
       tile
     >
