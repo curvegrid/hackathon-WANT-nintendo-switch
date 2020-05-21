@@ -25,23 +25,23 @@ contract WANTPool is WANTDecimals {
         address tokenAddress;
         uint256 amount;
     }
-    /// @dev For each token, what is the amount of tokens in the pool
-    /// @dev this amount is the number of tokens before considering decimals
+    /// @dev For each token, what is the amount of tokens in the pool.
+    /// @dev This amount is the number of tokens before considering decimals
     ERC20Token[] private _ownedTokenAmounts;
 
     uint256 public minimumClaimCost = 100;
     mapping(address => uint256) private _currentCost;
 
-    /// @dev uniswap router with a hard-coded address
+    /// @dev Uniswap router with a hard-coded address.
     IUniswapV2Router01 private _router = IUniswapV2Router01(0xf164fC0Ec4E93095b804a4795bBe1e041497b92a);
 
-    /// @notice return address of the i-th token in the pool
+    /// @notice Return address of the i-th token in the pool.
     function getTokenAddress(uint256 index) public view returns (address tokenAddress) {
         require(index >= 0 && index < numberOfDistinctTokens(), "wrong index");
         tokenAddress = _ownedTokenAmounts[index].tokenAddress;
     }
 
-    /// @notice Return the amount of a token in the pool
+    /// @notice Return the amount of a token in the pool.
     function ownedTokenAmount(address tokenAddress)
         public
         view
@@ -64,7 +64,7 @@ contract WANTPool is WANTDecimals {
         }
     }
 
-    /// @dev Return the total amount of tokens we own before considering decimals
+    /// @dev Return the total amount of tokens we own before considering decimals.
     function _totalOwnedTokensWithoutDecimals() internal view returns (uint256 amount) {
         amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
@@ -72,7 +72,7 @@ contract WANTPool is WANTDecimals {
         }
     }
 
-    /// @notice Get the number of distinct tokens in the pool
+    /// @notice Get the number of distinct tokens in the pool.
     function numberOfDistinctTokens() public view returns (uint256) {
         return _ownedTokenAmounts.length;
     }
@@ -135,7 +135,7 @@ contract WANTPool is WANTDecimals {
         }
     }
 
-    /// @dev Return reserves of a uniswap pair of tokenAddress and WETH
+    /// @dev Return reserves of a uniswap pair of tokenAddress and WETH.
     function _getUniswapReserves(address _tokenAddress) internal view returns (uint256 reserveWETH, uint256 reserveToken) {
         address wethAddress = _router.WETH();
         address factory = _router.factory();
@@ -144,7 +144,7 @@ contract WANTPool is WANTDecimals {
         require(reserveWETH > 0 && reserveToken > 0, "The deposited token is not supported");
     }
 
-    /// @dev Return the amount of one token before considering decimals
+    /// @dev Return the amount of one token before considering decimals.
     function _getOneTokenAmount(address _tokenAddress) internal pure returns (uint256 amount) {
         IERC20WithDecimals _token = IERC20WithDecimals(_tokenAddress);
         uint8 tokenDecimals = _token.decimals();
@@ -155,7 +155,7 @@ contract WANTPool is WANTDecimals {
         }
     }
 
-    /// @notice Return the expected number of WANT tokens received from a deposit
+    /// @notice Return the expected number of WANT tokens received from a deposit.
     function getPayout(address tokenAddress, uint256 amount) public view returns (uint256 payout) {
         // try to find the token from the pool list
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
@@ -167,7 +167,7 @@ contract WANTPool is WANTDecimals {
         return _depositPayout(tokenAddress, 0, amount);
     }
 
-    /// @dev How much does the minter get from "amount" of "token"
+    /// @dev How much does the minter get from "amount" of "token".
     function _depositPayout(address _tokenAddress, uint256 _tokenAmount, uint256 _amount)
         private
         view
@@ -199,7 +199,7 @@ contract WANTPool is WANTDecimals {
         return payout;
     }
 
-    /// @dev Get a pseudorandom number, mod totalOwnedTokens
+    /// @dev Get a pseudorandom number, mod totalOwnedTokens.
     function _random() private view returns (uint256) {
         return
             uint256(

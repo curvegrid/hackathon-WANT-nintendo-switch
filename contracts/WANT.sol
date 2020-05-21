@@ -6,7 +6,7 @@ import "contracts/pool.sol";
 
 contract WANT is WANTERC20, WANTPool {
     /// @notice Deposits an amount of tokens into the WANT pool.
-    /// @param owner  The address of the owner
+    /// @param owner The address of the owner.
     /// @param receivedAmount The amount of WANT tokens received from the deposit.
     /// @param originalTokenAddress The original ERC20 token address.
     /// @param tokenAmount The token amount deposited.
@@ -17,7 +17,7 @@ contract WANT is WANTERC20, WANTPool {
         uint256 tokenAmount
     );
     /// @notice Claims a random token from the Pool.
-    /// @param owner  The address of the owner
+    /// @param owner The address of the owner.
     /// @param cost The amount of WANT tokens used for claiming.
     /// @param receivedTokenAddress The received ERC20 token address.
     /// @param tokenAmount The token amount claimed.
@@ -28,7 +28,7 @@ contract WANT is WANTERC20, WANTPool {
         uint256 tokenAmount
     );
 
-    /// @dev claimedToken shows the total claimed amount and cost of an ERC20 token
+    /// @dev claimedToken shows the total claimed amount and cost of an ERC20 token.
     struct ClaimedToken {
         address tokenAddress;
         uint256 amount;
@@ -52,8 +52,8 @@ contract WANT is WANTERC20, WANTPool {
     }
 
     /// @notice Burn [claimCost()] WANT tokens in exchange for a single random token in the pool.
-    /// @notice Try to perform the withdraw [amount] times
-    /// @notice Return number of successful claims
+    /// @notice Try to perform the withdraw [amount] times.
+    /// @notice Return number of successful claims.
     function claim(uint256 amount) public returns (uint256 numberOfClaims) {
         return _claimFrom(msg.sender, amount);
     }
@@ -79,7 +79,7 @@ contract WANT is WANTERC20, WANTPool {
     }
 
     /// @dev Process a claim from the given address.
-    /// @dev Return the number of successful claims
+    /// @dev Return the number of successful claims.
     function _claimFrom(address _address, uint256 _amount)
         private
         returns (uint256 numberOfClaims)
