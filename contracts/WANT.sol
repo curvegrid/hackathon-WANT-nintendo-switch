@@ -7,23 +7,23 @@ import "contracts/pool.sol";
 contract WANT is WANTERC20, WANTPool {
     /// @notice Deposits an amount of tokens into the WANT pool.
     /// @param owner  The address of the owner
-    /// @param amount The amount of WANT tokens received from the deposit.
+    /// @param receivedAmount The amount of WANT tokens received from the deposit.
     /// @param originalTokenAddress The original ERC20 token address.
     /// @param tokenAmount The token amount deposited.
     event Deposit(
         address indexed owner,
-        uint256 amount,
+        uint256 receivedAmount,
         address indexed originalTokenAddress,
         uint256 tokenAmount
     );
     /// @notice Claims a random token from the Pool.
     /// @param owner  The address of the owner
-    /// @param amount The amount of WANT tokens used for claiming.
+    /// @param cost The amount of WANT tokens used for claiming.
     /// @param receivedTokenAddress The received ERC20 token address.
     /// @param tokenAmount The token amount claimed.
     event Claim(
         address indexed owner,
-        uint256 amount,
+        uint256 cost,
         address indexed receivedTokenAddress,
         uint256 tokenAmount
     );
@@ -45,12 +45,16 @@ contract WANT is WANTERC20, WANTPool {
 
     /// @notice Returns the claim cost of the next claim.
     function claimCost() public view returns (uint256 cost) {
-        return _claimCost(msg.sender);
+        cost = _claimCost(msg.sender);
+        // user hasn't claimed yet
+        if (cost == 0) cost = _oneWANTUnit;
+        return cost;
     }
 
     /// @notice Burn [claimCost()] WANT tokens in exchange for a single random token in the pool.
     /// @notice Try to perform the withdraw [amount] times
-    function claim(uint256 amount) public returns (uint256 claimedAmount) {
+    /// @notice Return number of successful claims
+    function claim(uint256 amount) public returns (uint256 numberOfClaims) {
         return _claimFrom(msg.sender, amount);
     }
 
@@ -78,44 +82,49 @@ contract WANT is WANTERC20, WANTPool {
     /// @dev Return the number of successful claims
     function _claimFrom(address _address, uint256 _amount)
         private
-        returns (uint256 claims)
+        returns (uint256 numberOfClaims)
     {
         // claimedTokens represents the amount of claimed tokens for each ERC20 token
-        ClaimedToken[] memory claimedTokens = new ClaimedToken[](NumberOfTokens());
+        ClaimedToken[] memory claimedTokens = new ClaimedToken[](numberOfDistinctTokens());
+        for (uint256 i = 0; i < claimedTokens.length; i++) {
+            claimedTokens[i] = ClaimedToken(getTokenAddress(i), 0, 0);
+        }
 
+        uint256 totalCost = 0;
         for (uint256 i = 0; i < _amount; i++) {
-            uint256 _cost = _claimCost(_address);
-
-            // Burn the given amount of tokens
-            _burn(_address, _cost);
-
             // If there is no token in the pool, we stop the withdraw
             if (totalOwnedTokens() == 0) break;
+
+            _reduceCost(_address);
+            uint256 cost = _claimCost(_address);
             // Collect the token from the pool
-            claims = claims.add(1);
+            numberOfClaims = numberOfClaims.add(1);
+            totalCost = totalCost.add(cost);
             (address tokenAddress, uint256 claimedAmount) = _withdrawTokenFromPool();
 
             // check if the claimed token is already in claimedTokens list
-            bool found = false;
             for (uint256 j = 0; j < claimedTokens.length; j++) {
                 if (claimedTokens[j].tokenAddress == tokenAddress) {
                     claimedTokens[j].amount = claimedTokens[j].amount.add(claimedAmount);
-                    claimedTokens[j].cost = claimedTokens[j].cost.add(_cost);
-                    found = true;
+                    claimedTokens[j].cost = claimedTokens[j].cost.add(cost);
                     break;
                 }
             }
+        }
 
-            // cannot find the token, this should not happen
-            assert(false);
+        // Burn the given amount of tokens
+        if (totalCost > 0) {
+            _burn(_address, totalCost);
         }
 
         // Perform ERC20 transfer for each ERC20 token claimed
         for (uint256 i = 0; i < claimedTokens.length; i++) {
             IERC20 _token = IERC20(claimedTokens[i].tokenAddress);
-            _token.transfer(_address, claimedTokens[i].amount);
-            // Fire the event
-            emit Claim(_address, claimedTokens[i].cost, claimedTokens[i].tokenAddress, claimedTokens[i].amount);
+            if (claimedTokens[i].amount > 0) {
+                _token.transfer(_address, claimedTokens[i].amount);
+                // Fire the event
+                emit Claim(_address, claimedTokens[i].cost, claimedTokens[i].tokenAddress, claimedTokens[i].amount);
+            }
         }
     }
 }
