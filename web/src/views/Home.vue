@@ -44,23 +44,24 @@
 <script>
 
 export default {
-  name: 'HelloWorld',
+  name: 'Home',
   data: () => ({
     tokenName: '',
     tokenSupply: 0,
     sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
-    apiKey: 'TODO PASTE API KEY HERE',
+    apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
   created() {
     this.getTokenSupply();
+    this.getTokenName();
   },
   methods: {
     async getTokenSupply() {
-      this.tokenSupply = await this.$root.$_cgutils.callMethod('curvetoken', 'mltitoken', 'totalSupply', this.sender,
+      this.tokenSupply = await this.$root.$_cgutils.callMethod('want8', 'want', 'NumberOftokens', this.sender,
         this.apiKey);
     },
     async getTokenName() {
-      this.tokenName = await this.$root.$_cgutils.callMethod('curvetoken', 'mltitoken', 'name', this.sender,
+      this.tokenName = await this.$root.$_cgutils.callMethod('want8', 'want', 'name', this.sender,
         this.apiKey);
     },
     async mintTokens(amount) {

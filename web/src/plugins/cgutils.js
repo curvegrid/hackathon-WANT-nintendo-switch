@@ -4,6 +4,7 @@
 import axios from 'axios';
 import { utils } from 'ethers';
 
+const BASE_URL = 'https://ksribvsuevhjdae4pndexvfiuu.multibaas.com';
 
 export default {
   install: (Vue) => {
@@ -30,7 +31,7 @@ export default {
         return axios({
           method: 'POST',
           credentials: 'same-origin',
-          url: `http://localhost:8080/api/v0/chains/ethereum/addresses/${contract}/contracts/${instance}/methods/${method}`,
+          url: `${BASE_URL}/api/v0/chains/ethereum/addresses/${contract}/contracts/${instance}/methods/${method}`,
           data: { args: args || [], from: sender },
           headers: { Authorization: `Bearer ${apiKey}` },
         });
