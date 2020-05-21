@@ -75,10 +75,10 @@ contract WANT is WANTERC20, WANTPool {
     }
 
     /// @dev Process a claim from the given address.
-    /// @dev Return the amount of successfully claimed tokens from the pool
+    /// @dev Return the number of successful claims
     function _claimFrom(address _address, uint256 _amount)
         private
-        returns (uint256 amount)
+        returns (uint256 claims)
     {
         // claimedTokens represents the amount of claimed tokens for each ERC20 token
         ClaimedToken[] memory claimedTokens = new ClaimedToken[](NumberOfTokens());
@@ -89,10 +89,10 @@ contract WANT is WANTERC20, WANTPool {
             // Burn the given amount of tokens
             _burn(_address, _cost);
 
-            // If there is no token in the pool, we stop with the withdraw
+            // If there is no token in the pool, we stop the withdraw
             if (totalOwnedTokens() == 0) break;
             // Collect the token from the pool
-            amount = amount.add(1);
+            claims = claims.add(1);
             (address tokenAddress, uint256 claimedAmount) = _withdrawTokenFromPool();
 
             // check if the claimed token is already in claimedTokens list

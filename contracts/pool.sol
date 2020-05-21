@@ -21,12 +21,13 @@ contract WANTPool is WANTDecimals {
 
     struct ERC20Token {
         address tokenAddress;
-        uint256 amount; // the token amount before taking decimals into account
+        uint256 amount;
     }
     /// @dev For each token, what is the amount of tokens in the pool
+    /// @dev this amount is the number of tokens before considering decimals
     ERC20Token[] private _ownedTokenAmounts;
 
-    /// @dev uniswap router
+    /// @dev uniswap router with a hard-coded address
     IUniswapV2Router01 _router = IUniswapV2Router01(0xf164fC0Ec4E93095b804a4795bBe1e041497b92a);
 
     /// @notice Return the amount of a token in the pool
@@ -35,6 +36,7 @@ contract WANTPool is WANTDecimals {
         view
         returns (uint256 amount)
     {
+        // if we cannot find the token in pool, the amount is zero
         amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             if (_ownedTokenAmounts[i].tokenAddress == tokenAddress) {
@@ -51,7 +53,7 @@ contract WANTPool is WANTDecimals {
         }
     }
 
-    /// @dev Return the total amount of tokens we own before taking decimals into account
+    /// @dev Return the total amount of tokens we own before considering decimals
     function _totalOwnedTokensWithoutDecimals() internal view returns (uint256 amount) {
         amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
@@ -118,7 +120,7 @@ contract WANTPool is WANTDecimals {
         require(reserveWETH > 0 && reserveToken > 0, "The deposited token is not supported");
     }
 
-    /// @dev Return the amount of one token before taking decimals into account
+    /// @dev Return the amount of one token before considering decimals
     function _getOneTokenAmount(address _tokenAddress) internal pure returns (uint256 amount) {
         IERC20WithDecimals _token = IERC20WithDecimals(_tokenAddress);
         uint8 tokenDecimals = _token.decimals();
@@ -154,15 +156,17 @@ contract WANTPool is WANTDecimals {
         // in which, 200 is a constant to make one WANT token has an expected price of 1/200 ether,
         // eth_relative_price = reserveToken / reserveWETH is the token's relative price compared to WrappedETH
         // rarity = _erc20Token.amount / (totalOwnedTokens + _amount) is the rarity of the token in the pool
-        // amount_of_tokens = _amount / oneTokenAmount is the amount of tokens if we take decimals into account
+        // amount_of_tokens = _amount / oneTokenAmount is the amount of tokens if we consider decimals
 
-        // nextTotal is the next amount of tokens in the pool before taking decimals into account
+        // nextTotal is the next amount of tokens in the pool before considering decimals
         uint256 nextTotal = _totalOwnedTokensWithoutDecimals().add(_amount);
 
         payout = payout.mul(reserveToken);
         payout = payout.mul(nextTotal.sub(_tokenAmount));
         payout = payout.mul(_amount);
         payout = payout.mul(200);
+
+        payout = payout.mul(_oneWANTUnit); // the current amount is without WANT decimals
 
         payout = payout.div(reserveWETH);
         payout = payout.div(nextTotal);
