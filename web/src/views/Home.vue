@@ -16,9 +16,10 @@
       >
         <v-tabs
           v-model="tab"
-          fixed-tabs
+          background-color="primary lighten-1"
           icons-and-text
           centered
+          grow
         >
           <v-tab>
             Deposit

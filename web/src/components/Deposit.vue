@@ -49,7 +49,7 @@ export default {
       selectedToken: null,
       // TODO: populate this list of tokens our platform accepts and the correct addresses
       acceptedTokens: {
-        DAI: '0x0d6c3707a98bcE1A56247555c8B74242705B8acf',
+        DAI: '0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658',
       },
     };
   },
