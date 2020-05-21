@@ -66,7 +66,7 @@ export default {
     deposit() {
       if (this.fieldsCompleted) {
         const tokenAddr = this.acceptedTokens[this.selectedToken];
-        this.$emit('deposit', tokenAddr, this.amount);
+        bus.$emit('deposit', tokenAddr, this.amount);
       }
     },
   },

@@ -45,8 +45,8 @@ export default {
       // web3: a handle to the web3 instance
       async sendMethod(contract, instance, method, sender, web3, apiKey, args) {
         try {
-          const response = await this.methodPostHelper(contract, instance, method, sender, args,
-            apiKey);
+          const response = await this.methodPostHelper(contract, instance, method, sender,
+            apiKey, args);
 
           // Send transaction to Blockchain for POST requests only
           const { tx, submitted } = response.data.result;

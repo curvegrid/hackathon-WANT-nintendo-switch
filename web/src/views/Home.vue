@@ -70,27 +70,32 @@ export default {
     tab: 0,
     tokenName: '',
     tokenSupply: 0,
+    contract: 'want',
+    address: 'want8',
     sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
   created() {
     this.getTokenSupply();
     this.getTokenName();
+    console.log(this.tokenName);
+
+    bus.$on('deposit', (address, amount) => this.deposit(address, amount));
   },
   methods: {
     async getTokenSupply() {
-      this.tokenSupply = await this.$root.$_cgutils.callMethod('want8', 'want', 'NumberOftokens', this.sender,
+      this.tokenSupply = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'NumberOfTokens', this.sender,
         this.apiKey);
     },
     async getTokenName() {
-      this.tokenName = await this.$root.$_cgutils.callMethod('want8', 'want', 'name', this.sender,
+      this.tokenName = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'name', this.sender,
         this.apiKey);
     },
-    async mintTokens(amount) {
-      const args = [`${amount}`];
-      await this.$root.$_cgutils.sendMethod('curvetoken', 'mltitoken', 'mint', this.sender, this.$root.$_web3,
+    async deposit(address, amount) {
+      const args = [`${address}`, `${amount}`];
+      // TODO: need to make the sender the user's active metamast account
+      await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'deposit', this.sender, this.$root.$_web3,
         this.apiKey, args);
-      this.getTokenSupply();
     },
   },
 };
