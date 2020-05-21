@@ -37,18 +37,20 @@
 export default {
   data() {
     return {
-      // TODO: populate this list of tokens our platform accepts
-      acceptedTokens: [
-        {
-          name: 'DAI',
-          address: '',
-        },
-      ],
+      amount: 0,
     };
+  },
+  computed: {
+    fieldsCompleted() {
+      return this.amount > 0;
+    },
   },
   methods: {
     redeem() {
-
+      if (this.fieldsCompleted) {
+        bus.$emit('redeem', this.amount);
+        this.amount = 0;
+      }
     },
   },
 };
