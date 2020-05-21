@@ -66,8 +66,8 @@ export default {
     },
     async mintTokens(amount) {
       const args = [`${amount}`];
-      await this.$root.$_cgutils.sendMethod('curvetoken', 'mltitoken', 'mint', this.sender, args, this.$root.$_web3,
-        this.apiKey);
+      await this.$root.$_cgutils.sendMethod('curvetoken', 'mltitoken', 'mint', this.sender, this.$root.$_web3,
+        this.apiKey, args);
       this.getTokenSupply();
     },
   },

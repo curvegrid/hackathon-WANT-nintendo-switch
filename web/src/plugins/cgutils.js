@@ -16,10 +16,10 @@ export default {
       // method: the name of the read method
       // sender: the from address for the transaction
       // args: the arguments for the method call
-      async callMethod(contract, instance, method, sender, args, apiKey) {
+      async callMethod(contract, instance, method, sender, apiKey, args) {
         try {
-          const response = await this.methodPostHelper(contract, instance, method, sender, args,
-            apiKey);
+          const response = await this.methodPostHelper(contract, instance, method, sender,
+            apiKey, args);
           return response.data.result.output;
         } catch (e) {
           console.warn(e);
@@ -27,7 +27,7 @@ export default {
         return null;
       },
       // Sends an axios request to multibaas
-      async methodPostHelper(contract, instance, method, sender, args, apiKey) {
+      async methodPostHelper(contract, instance, method, sender, apiKey, args) {
         return axios({
           method: 'POST',
           credentials: 'same-origin',
@@ -43,7 +43,7 @@ export default {
       // sender: the from address for the transaction
       // args: the arguments for the method call
       // web3: a handle to the web3 instance
-      async sendMethod(contract, instance, method, sender, args, apiKey, web3) {
+      async sendMethod(contract, instance, method, sender, web3, apiKey, args) {
         try {
           const response = await this.methodPostHelper(contract, instance, method, sender, args,
             apiKey);
