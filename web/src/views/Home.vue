@@ -34,16 +34,16 @@
             <v-card
               flat
             >
-              <v-card-text>Deposit something</v-card-text>
+              <deposit />
             </v-card>
           </v-tab-item>
           <v-tab-item
-            :key="0"
+            :key="1"
           >
             <v-card
               flat
             >
-              <v-card-text>Redeem something</v-card-text>
+              <redeem />
             </v-card>
           </v-tab-item>
         </v-tabs-items>
@@ -53,9 +53,16 @@
 </template>
 
 <script>
+import Deposit from '../components/Deposit.vue';
+import Redeem from '../components/Redeem.vue';
+
 
 export default {
   name: 'Home',
+  components: {
+    Deposit,
+    Redeem,
+  },
   data: () => ({
     tab: 0,
     tokenName: '',
