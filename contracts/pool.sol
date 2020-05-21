@@ -86,13 +86,13 @@ contract WANTPool is WANTDecimals {
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             ERC20Token storage v = _ownedTokenAmounts[i];
             if (v.tokenAddress == _tokenAddress) {
-                payout = getPayout(_tokenAddress, _amount);
+                payout = _depositPayout(_tokenAddress, _ownedTokenAmounts[i].amount, _amount);
                 v.amount = v.amount.add(_amount);
                 return payout;
             }
         }
         // Token not found: add it
-        payout = getPayout(_tokenAddress, _amount);
+        payout = _depositPayout(_tokenAddress, 0, _amount);
         _ownedTokenAmounts.push(ERC20Token(_tokenAddress, _amount));
         return payout;
     }
