@@ -37,20 +37,30 @@
       type="success"
       tile
     >
-      Congrats, you earned 1 MANA!
+      {{ successMessage }}
     </v-alert>
     <v-alert
       v-if="!success && success != null"
       type="error"
       tile
     >
-      Oops, something went wrong
+      {{ errorMessage }}
     </v-alert>
   </div>
 </template>
 
 <script>
 export default {
+  props: {
+    successMessage: {
+      type: String,
+      default: 'Congrats you earned 1 MANA',
+    },
+    errorMessage: {
+      type: String,
+      default: 'Oops, Something went wrong',
+    },
+  },
   data() {
     return {
       amount: 0,
@@ -67,7 +77,7 @@ export default {
       if (this.fieldsCompleted) {
         bus.$emit('redeem', this.amount);
         this.amount = 0;
-        this.success = false;
+        this.success = true;
       }
     },
   },
