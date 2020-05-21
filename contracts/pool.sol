@@ -68,9 +68,8 @@ contract WANTPool is WANTDecimals {
     function _totalOwnedTokensWithoutDecimals() internal view returns (uint256 amount) {
         amount = 0;
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
-            amount.add(_ownedTokenAmounts[i].amount);
+            amount = amount.add(_ownedTokenAmounts[i].amount);
         }
-
     }
 
     /// @notice Get the number of distinct tokens in the pool
