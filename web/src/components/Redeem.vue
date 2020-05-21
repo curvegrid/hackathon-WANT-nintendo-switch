@@ -33,14 +33,14 @@
       </v-form>
     </v-container>
     <v-alert
-      v-if="success"
+      v-if="success != ''"
       type="success"
       tile
     >
       {{ successMessage }}
     </v-alert>
     <v-alert
-      v-if="!success && success != null"
+      v-if="errorMessage != ''"
       type="error"
       tile
     >
@@ -54,17 +54,16 @@ export default {
   props: {
     successMessage: {
       type: String,
-      default: 'Congrats you earned 1 MANA',
+      required: true,
     },
     errorMessage: {
       type: String,
-      default: 'Oops, Something went wrong',
+      required: true,
     },
   },
   data() {
     return {
       amount: 0,
-      result: null,
     };
   },
   computed: {
@@ -77,7 +76,6 @@ export default {
       if (this.fieldsCompleted) {
         bus.$emit('redeem', this.amount);
         this.amount = 0;
-        this.success = true;
       }
     },
   },

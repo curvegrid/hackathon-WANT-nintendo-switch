@@ -50,7 +50,10 @@
                 <v-card
                   flat
                 >
-                  <redeem />
+                  <redeem
+                    :success-message="redeemStatus.successMessage"
+                    :error-message="redeemStatus.errorMessage"
+                  />
                 </v-card>
               </v-tab-item>
             </v-tabs-items>
@@ -76,6 +79,11 @@ export default {
     tab: 0,
     tokenName: '',
     tokenSupply: 0,
+
+    redeemStatus: {
+      successMessage: '',
+      errorMessage: '',
+    },
     contract: 'want',
     address: 'want8',
     sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
@@ -87,6 +95,7 @@ export default {
     console.log(this.tokenName);
 
     bus.$on('deposit', (address, amount) => this.deposit(address, amount));
+    bus.$on('redeem', (amount) => this.redeem(amount));
   },
   methods: {
     async getTokenSupply() {
@@ -99,9 +108,16 @@ export default {
     },
     async deposit(address, amount) {
       const args = [`${address}`, `${amount}`];
-      // TODO: need to make the sender the user's active metamast account
+      // TODO: need to make the sender the user's active metamask account
       await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'deposit', this.sender, this.$root.$_web3,
         this.apiKey, args);
+    },
+    async redeem(amount) {
+      const args = [`${amount}`];
+      await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'claim', this.sender, this.$root.$_web3,
+        this.apiKey, args);
+      // TODO make this meaningful
+      this.redeemStatus.successMessage = 'Congrats you earned 1 MANA!';
     },
   },
 };
