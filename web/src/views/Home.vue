@@ -10,7 +10,10 @@
         />
       </v-col>
 
-      <v-col class="mb-4">
+      <v-col
+        class="mb-4"
+        cols="12"
+      >
         <v-tabs
           v-model="tab"
           fixed-tabs
