@@ -11,31 +11,42 @@
       </v-col>
 
       <v-col class="mb-4">
-        <v-layout column>
-          <v-flex>
-            <v-btn
-              class="primary"
-              @click="getTokenName"
+        <v-tabs
+          v-model="tab"
+          fixed-tabs
+          icons-and-text
+          centered
+        >
+          <v-tab>
+            Deposit
+            <v-icon>account-balance</v-icon>
+          </v-tab>
+          <v-tab>
+            Redeem
+            <v-icon>local-play</v-icon>
+          </v-tab>
+        </v-tabs>
+
+        <v-tabs-items v-model="tab">
+          <v-tab-item
+            :key="0"
+          >
+            <v-card
+              flat
             >
-              Read from MultiBaas!
-            </v-btn>
-          </v-flex>
-          <v-flex>
-            {{ tokenName }}
-          </v-flex>
-          <br>
-          <v-flex>
-            <v-btn
-              class="primary"
-              @click="mintTokens(100)"
+              <v-card-text>Deposit something</v-card-text>
+            </v-card>
+          </v-tab-item>
+          <v-tab-item
+            :key="0"
+          >
+            <v-card
+              flat
             >
-              Mint free money!
-            </v-btn>
-          </v-flex>
-          <v-flex>
-            {{ tokenSupply }}
-          </v-flex>
-        </v-layout>
+              <v-card-text>Redeem something</v-card-text>
+            </v-card>
+          </v-tab-item>
+        </v-tabs-items>
       </v-col>
     </v-row>
   </v-container>
@@ -46,6 +57,7 @@
 export default {
   name: 'Home',
   data: () => ({
+    tab: 0,
     tokenName: '',
     tokenSupply: 0,
     sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
