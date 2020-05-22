@@ -4,6 +4,7 @@
 import axios from 'axios';
 import { utils } from 'ethers';
 
+const BASE_URL = 'https://ksribvsuevhjdae4pndexvfiuu.multibaas.com';
 
 export default {
   install: (Vue) => {
@@ -15,10 +16,10 @@ export default {
       // method: the name of the read method
       // sender: the from address for the transaction
       // args: the arguments for the method call
-      async callMethod(contract, instance, method, sender, args, apiKey) {
+      async callMethod(contract, instance, method, sender, apiKey, args) {
         try {
-          const response = await this.methodPostHelper(contract, instance, method, sender, args,
-            apiKey);
+          const response = await this.methodPostHelper(contract, instance, method, sender,
+            apiKey, args);
           return response.data.result.output;
         } catch (e) {
           console.warn(e);
@@ -26,11 +27,11 @@ export default {
         return null;
       },
       // Sends an axios request to multibaas
-      async methodPostHelper(contract, instance, method, sender, args, apiKey) {
+      async methodPostHelper(contract, instance, method, sender, apiKey, args) {
         return axios({
           method: 'POST',
           credentials: 'same-origin',
-          url: `http://localhost:8080/api/v0/chains/ethereum/addresses/${contract}/contracts/${instance}/methods/${method}`,
+          url: `${BASE_URL}/api/v0/chains/ethereum/addresses/${contract}/contracts/${instance}/methods/${method}`,
           data: { args: args || [], from: sender },
           headers: { Authorization: `Bearer ${apiKey}` },
         });
@@ -42,10 +43,10 @@ export default {
       // sender: the from address for the transaction
       // args: the arguments for the method call
       // web3: a handle to the web3 instance
-      async sendMethod(contract, instance, method, sender, args, apiKey, web3) {
+      async sendMethod(contract, instance, method, sender, web3, apiKey, args) {
         try {
-          const response = await this.methodPostHelper(contract, instance, method, sender, args,
-            apiKey);
+          const response = await this.methodPostHelper(contract, instance, method, sender,
+            apiKey, args);
 
           // Send transaction to Blockchain for POST requests only
           const { tx, submitted } = response.data.result;

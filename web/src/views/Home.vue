@@ -1,73 +1,129 @@
 <template>
-  <v-container>
-    <v-row class="text-center">
-      <v-col cols="12">
-        <v-img
-          :src="require('../assets/logo.svg')"
-          class="my-3"
-          contain
-          height="200"
-        />
-      </v-col>
+  <div>
+    <v-container>
+      <v-row class="text-center">
+        <v-col cols="12">
+          <v-img
+            :src="require('../assets/logo.svg')"
+            class="my-3"
+            contain
+            height="200"
+          />
+        </v-col>
+      </v-row>
+      <v-card fluid>
+        <v-row class="text-center">
+          <v-col
+            class="mb-4"
+            cols="12"
+          >
+            <v-tabs
+              v-model="tab"
+              background-color="primary lighten-1"
+              icons-and-text
+              centered
+              grow
+            >
+              <v-tab>
+                Deposit
+                <v-icon>account-balance</v-icon>
+              </v-tab>
+              <v-tab>
+                Redeem
+                <v-icon>local-play</v-icon>
+              </v-tab>
+            </v-tabs>
 
-      <v-col class="mb-4">
-        <v-layout column>
-          <v-flex>
-            <v-btn
-              class="primary"
-              @click="getTokenName"
-            >
-              Read from MultiBaas!
-            </v-btn>
-          </v-flex>
-          <v-flex>
-            {{ tokenName }}
-          </v-flex>
-          <br>
-          <v-flex>
-            <v-btn
-              class="primary"
-              @click="mintTokens(100)"
-            >
-              Mint free money!
-            </v-btn>
-          </v-flex>
-          <v-flex>
-            {{ tokenSupply }}
-          </v-flex>
-        </v-layout>
-      </v-col>
-    </v-row>
-  </v-container>
+            <v-tabs-items v-model="tab">
+              <v-tab-item
+                :key="0"
+              >
+                <v-card
+                  flat
+                >
+                  <deposit />
+                </v-card>
+              </v-tab-item>
+              <v-tab-item
+                :key="1"
+              >
+                <v-card
+                  flat
+                >
+                  <redeem
+                    :success-message="redeemStatus.successMessage"
+                    :error-message="redeemStatus.errorMessage"
+                  />
+                </v-card>
+              </v-tab-item>
+            </v-tabs-items>
+          </v-col>
+        </v-row>
+      </v-card>
+    </v-container>
+  </div>
 </template>
 
 <script>
+import Deposit from '../components/Deposit.vue';
+import Redeem from '../components/Redeem.vue';
+
 
 export default {
-  name: 'HelloWorld',
+  name: 'Home',
+  components: {
+    Deposit,
+    Redeem,
+  },
   data: () => ({
+    tab: 0,
     tokenName: '',
     tokenSupply: 0,
+
+    redeemStatus: {
+      successMessage: '',
+      errorMessage: '',
+    },
+    contract: 'want',
+    address: 'want8',
     sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
-    apiKey: 'TODO PASTE API KEY HERE',
+    apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
+  watch: {
+    tab() {
+      console.log('tab change');
+      this.$set(this.redeemStatus, 'successMessage', '');
+      this.$set(this.redeemStatus, 'errorMessage', '');
+    },
+  },
   created() {
     this.getTokenSupply();
+    this.getTokenName();
+
+    bus.$on('deposit', (address, amount) => this.deposit(address, amount));
+    bus.$on('redeem', (amount) => this.redeem(amount));
   },
   methods: {
     async getTokenSupply() {
-      this.tokenSupply = await this.$root.$_cgutils.callMethod('curvetoken', 'mltitoken', 'totalSupply', this.sender,
+      this.tokenSupply = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'NumberOfTokens', this.sender,
         this.apiKey);
     },
     async getTokenName() {
-      this.tokenName = await this.$root.$_cgutils.callMethod('curvetoken', 'mltitoken', 'name', this.sender,
+      this.tokenName = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'name', this.sender,
         this.apiKey);
     },
-    async mintTokens(amount) {
+    async deposit(address, amount) {
+      const args = [`${address}`, `${amount}`];
+      // TODO: need to make the sender the user's active metamask account
+      await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'deposit', this.sender, this.$root.$_web3,
+        this.apiKey, args);
+    },
+    async redeem(amount) {
       const args = [`${amount}`];
-      await this.$root.$_cgutils.sendMethod('curvetoken', 'mltitoken', 'mint', this.sender, args, this.$root.$_web3,
-        this.apiKey);
-      this.getTokenSupply();
+      await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'claim', this.sender, this.$root.$_web3,
+        this.apiKey, args);
+      // TODO make this meaningful
+      this.redeemStatus.successMessage = 'Congrats you earned 1 MANA!';
     },
   },
 };
