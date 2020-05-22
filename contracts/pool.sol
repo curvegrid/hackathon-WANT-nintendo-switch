@@ -30,6 +30,8 @@ contract WANTPool is WANTDecimals {
     ERC20Token[] private _ownedTokenAmounts;
 
     uint256 public minimumClaimCost = 100;
+    /// @dev the constant to make a WANT token has an expected price of 1/51 WETH
+    uint256 private _wantConstant = 51;
     mapping(address => uint256) private _currentCost;
 
     /// @dev Uniswap router with a hard-coded address.
@@ -148,7 +150,7 @@ contract WANTPool is WANTDecimals {
     }
 
     /// @notice Return the decimals of an ERC20 token
-    function getTokenDecimals(address tokenAddress) internal pure returns (uint8 decimals) {
+    function getTokenDecimals(address tokenAddress) public pure returns (uint8 decimals) {
         IERC20WithDecimals _token = IERC20WithDecimals(tokenAddress);
         decimals = _token.decimals();
     }
@@ -174,9 +176,8 @@ contract WANTPool is WANTDecimals {
         (uint256 reserveWETH, uint256 reserveToken) = _getUniswapReserves(_tokenAddress);
 
         payout = 1;
-        // payout = eth_relative_price * (1 - rarity) * amount_of_tokens * 200
+        // payout = eth_relative_price * (1 - rarity) * amount_of_tokens * _wantConstant
 
-        // in which, 200 is a constant to make one WANT token has an expected price of 1/200 ether,
         // eth_relative_price is the token's relative price compared to WrappedETH
         // rarity is the rarity of the token in the pool
         // amount_of_tokens is the deposited amount of tokens after considering decimals
@@ -194,8 +195,7 @@ contract WANTPool is WANTDecimals {
         payout = payout.mul(nextTotal.sub(currentTokenAmount));
         payout = payout.mul(_amount);
 
-        // constants of WANT Token
-        payout = payout.mul(200);
+        payout = payout.mul(_wantConstant);
         payout = payout.mul(_oneWANTUnit);
 
         payout = payout.div(reserveToken);
