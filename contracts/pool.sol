@@ -147,6 +147,12 @@ contract WANTPool is WANTDecimals {
         }
     }
 
+    /// @notice Return the decimals of an ERC20 token
+    function getTokenDecimals(address tokenAddress) internal pure returns (uint8 decimals) {
+        IERC20WithDecimals _token = IERC20WithDecimals(tokenAddress);
+        decimals = _token.decimals();
+    }
+
     /// @notice Return the expected number of WANT tokens received from a deposit.
     function getPayout(address tokenAddress, uint256 amount) public view returns (uint256 payout) {
         // try to find the token from the pool list

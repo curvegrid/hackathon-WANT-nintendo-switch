@@ -11,5 +11,5 @@ contract WANTDecimals {
 
 
 contract WANTERC20 is ERC20Burnable, ERC20Detailed, WANTDecimals {
-    constructor() public ERC20Detailed("WANT", "", _decimals) {}
+    constructor() public ERC20Detailed("WANT Token", "WANT", _decimals) {}
 }
