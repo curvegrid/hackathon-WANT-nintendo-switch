@@ -64,14 +64,6 @@ contract WANTPool is WANTDecimals {
         }
     }
 
-    /// @dev Return the total amount of tokens we own before considering decimals.
-    function _totalOwnedTokensWithoutDecimals() internal view returns (uint256 amount) {
-        amount = 0;
-        for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
-            amount = amount.add(_ownedTokenAmounts[i].amount);
-        }
-    }
-
     /// @notice Get the number of distinct tokens in the pool.
     function numberOfDistinctTokens() public view returns (uint256) {
         return _ownedTokenAmounts.length;
@@ -142,6 +134,9 @@ contract WANTPool is WANTDecimals {
         (reserveWETH, reserveToken) = UniswapV2Library.getReserves(factory, wethAddress, _tokenAddress);
         // we reject all tokens which cannot convert to WETH by Uniswap-v2
         require(reserveWETH > 0 && reserveToken > 0, "The deposited token is not supported");
+        // normalize token reserves with decimals
+        reserveWETH = reserveWETH.div(_getOneTokenAmount(wethAddress));
+        reserveToken = reserveToken.div(_getOneTokenAmount(_tokenAddress));
     }
 
     /// @dev Return the amount of one token before considering decimals.
@@ -177,24 +172,27 @@ contract WANTPool is WANTDecimals {
 
         payout = 1;
         // payout = eth_relative_price * (1 - rarity) * amount_of_tokens * 200
-        // in which, 200 is a constant to make one WANT token has an expected price of 1/200 ether,
-        // eth_relative_price = reserveWETH / reserveToken is the token's relative price compared to WrappedETH
-        // rarity = _erc20Token.amount / (totalOwnedTokens + _amount) is the rarity of the token in the pool
-        // amount_of_tokens = _amount / oneTokenAmount is the amount of tokens if we consider decimals
 
-        // nextTotal is the next amount of tokens in the pool before considering decimals
-        uint256 nextTotal = _totalOwnedTokensWithoutDecimals().add(_amount);
+        // in which, 200 is a constant to make one WANT token has an expected price of 1/200 ether,
+        // eth_relative_price is the token's relative price compared to WrappedETH
+        // rarity is the rarity of the token in the pool
+        // amount_of_tokens is the deposited amount of tokens after considering decimals
+
+        uint256 oneTokenAmount = _getOneTokenAmount(_tokenAddress);
+        uint256 currentTokenAmount = _tokenAmount.div(oneTokenAmount);
+        uint256 nextTotal = totalOwnedTokens().add(_amount.div(oneTokenAmount));
 
         payout = payout.mul(reserveWETH);
-        payout = payout.mul(nextTotal.sub(_tokenAmount));
+        payout = payout.mul(nextTotal.sub(currentTokenAmount));
         payout = payout.mul(_amount);
-        payout = payout.mul(200);
 
-        payout = payout.mul(_oneWANTUnit); // the current amount is without WANT decimals
+        // constants of WANT Token
+        payout = payout.mul(200);
+        payout = payout.mul(_oneWANTUnit);
 
         payout = payout.div(reserveToken);
         payout = payout.div(nextTotal);
-        payout = payout.div(_getOneTokenAmount(_tokenAddress));
+        payout = payout.div(oneTokenAmount);
 
         return payout;
     }
