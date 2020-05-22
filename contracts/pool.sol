@@ -78,7 +78,7 @@ contract WANTPool is WANTDecimals {
         for (uint256 i = 0; i < _ownedTokenAmounts.length; i++) {
             ERC20Token storage v = _ownedTokenAmounts[i];
             if (v.tokenAddress == _tokenAddress) {
-                payout = _depositPayout(_tokenAddress, _ownedTokenAmounts[i].amount, _amount);
+                payout = _depositPayout(_tokenAddress, v.amount, _amount);
                 v.amount = v.amount.add(_amount);
                 return payout;
             }
@@ -134,9 +134,6 @@ contract WANTPool is WANTDecimals {
         (reserveWETH, reserveToken) = UniswapV2Library.getReserves(factory, wethAddress, _tokenAddress);
         // we reject all tokens which cannot convert to WETH by Uniswap-v2
         require(reserveWETH > 0 && reserveToken > 0, "The deposited token is not supported");
-        // normalize token reserves with decimals
-        reserveWETH = reserveWETH.div(_getOneTokenAmount(wethAddress));
-        reserveToken = reserveToken.div(_getOneTokenAmount(_tokenAddress));
     }
 
     /// @dev Return the amount of one token before considering decimals.
@@ -179,8 +176,13 @@ contract WANTPool is WANTDecimals {
         // amount_of_tokens is the deposited amount of tokens after considering decimals
 
         uint256 oneTokenAmount = _getOneTokenAmount(_tokenAddress);
+        uint256 oneWETHAmount = _getOneTokenAmount(_router.WETH());
+        // calculating the token rarity after considering decimals
         uint256 currentTokenAmount = _tokenAmount.div(oneTokenAmount);
-        uint256 nextTotal = totalOwnedTokens().add(_amount.div(oneTokenAmount));
+        uint256 nextTokenAmount = _tokenAmount.add(_amount).div(oneTokenAmount);
+        uint256 nextTotal = totalOwnedTokens().sub(currentTokenAmount).add(nextTokenAmount);
+
+        if (nextTotal == 0) return 0;
 
         payout = payout.mul(reserveWETH);
         payout = payout.mul(nextTotal.sub(currentTokenAmount));
@@ -192,7 +194,7 @@ contract WANTPool is WANTDecimals {
 
         payout = payout.div(reserveToken);
         payout = payout.div(nextTotal);
-        payout = payout.div(oneTokenAmount);
+        payout = payout.div(oneWETHAmount);
 
         return payout;
     }
