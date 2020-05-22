@@ -1,5 +1,15 @@
 <template>
   <div>
+    <v-banner
+      tile
+      color="primary lighten-4"
+      fluid
+      icon="account_balance"
+    >
+      <div>Your WANT Balance: {{ wantBalance }}</div>
+      <v-spacer />
+      <div>Number of Tokens in the Pool: {{ poolTokenCount }}</div>
+    </v-banner>
     <v-container>
       <v-row class="text-center">
         <v-col cols="12">
@@ -78,14 +88,15 @@ export default {
   data: () => ({
     tab: 0,
     tokenName: '',
-    tokenSupply: 0,
+    wantBalance: 0,
+    poolTokenCount: 0,
 
     redeemStatus: {
       successMessage: '',
       errorMessage: '',
     },
     contract: 'want',
-    address: 'want8',
+    address: 'want_demo_v0',
     sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
