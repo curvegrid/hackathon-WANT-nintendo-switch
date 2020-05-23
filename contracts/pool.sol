@@ -1,9 +1,10 @@
 pragma solidity >=0.5.0 <0.6.0;
 
 import "contracts/erc20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/math/Math.sol";
 import "contracts/UniswapV2Library.sol";
+// the first five lines will be ignore by scripts/create_upload.sh
+
+import "@openzeppelin/contracts/math/Math.sol";
 
 /// @dev A uniswap router interface to find the addresses of WETH coin and uniswap's factory
 interface IUniswapV2Router01 {

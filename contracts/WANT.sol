@@ -1,8 +1,8 @@
 pragma solidity >=0.5.0 <0.6.0;
 
-import "contracts/erc20.sol";
 import "contracts/pool.sol";
 
+// the first five lines will be ignore by scripts/create_upload.sh
 
 contract WANT is WANTERC20, WANTPool {
     /// @notice Deposits an amount of tokens into the WANT pool.

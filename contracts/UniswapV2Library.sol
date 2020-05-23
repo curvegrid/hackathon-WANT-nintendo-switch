@@ -1,5 +1,9 @@
 pragma solidity >=0.5.0;
 
+
+
+// the first five lines will be ignore by scripts/create_upload.sh
+
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 
 // use openzeppelin's SafeMath for solidity < 0.6.0

@@ -1,5 +1,9 @@
 pragma solidity >=0.5.0 <0.6.0;
 
+
+
+// the first five lines will be ignore by scripts/create_upload.sh
+
 import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 
