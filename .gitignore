@@ -35,3 +35,5 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+contracts/_upload.sol
+build

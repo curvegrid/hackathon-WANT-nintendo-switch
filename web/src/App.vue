@@ -26,13 +26,7 @@
       </v-toolbar-items>
     </v-app-bar>
     <v-content>
-      <v-container>
-        <v-card>
-          <v-container>
-            <router-view />
-          </v-container>
-        </v-card>
-      </v-container>
+      <router-view />
     </v-content>
   </v-app>
 </template>
