@@ -47,13 +47,11 @@ export default {
     return {
       amount: 0,
       selectedToken: null,
-      // TODO: populate this list of tokens our platform accepts and the correct addresses
       acceptedTokens: {
-        DAI: '0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658',
-        USDC: '0x',
-        BAT: '',
-        ENJ: '',
-        MANA: '',
+        ZRX: '0xddea378A6dDC8AfeC82C36E9b0078826bf9e68B6',
+        WBTC: '0x577D296678535e4903D59A4C929B718e1D575e0A',
+        USDC: '0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b',
+        DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
       },
     };
   },

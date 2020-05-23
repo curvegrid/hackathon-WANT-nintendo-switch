@@ -97,9 +97,13 @@ export default {
     },
     contract: 'want',
     address: 'want_demo_v0',
-    sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
+  computed: {
+    sender() {
+      return window.ethereum.selectedAddress;
+    },
+  },
   watch: {
     tab() {
       console.log('tab change');
@@ -108,15 +112,23 @@ export default {
     },
   },
   created() {
-    this.getTokenSupply();
-    this.getTokenName();
+    this.updateBalances();
 
     bus.$on('deposit', (address, amount) => this.deposit(address, amount));
     bus.$on('redeem', (amount) => this.redeem(amount));
   },
   methods: {
-    async getTokenSupply() {
-      this.tokenSupply = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'NumberOfTokens', this.sender,
+    async updateBalances() {
+      this.getWantBalance();
+      this.getPoolBalance();
+    },
+    async getWantBalance() {
+      const args = [`${this.sender}`];
+      this.wantBalance = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'balanceOf', this.sender,
+        this.apiKey, args);
+    },
+    async getPoolBalance() {
+      this.poolTokenCount = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'totalOwnedTokens', this.sender,
         this.apiKey);
     },
     async getTokenName() {
