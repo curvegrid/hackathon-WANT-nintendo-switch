@@ -97,9 +97,13 @@ export default {
     },
     contract: 'want',
     address: 'want_demo_v0',
-    sender: '0xBaC1Cd4051c378bF900087CCc445d7e7d02ad745',
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
+  computed: {
+    sender() {
+      return window.ethereum.selectedAddress;
+    },
+  },
   watch: {
     tab() {
       console.log('tab change');
