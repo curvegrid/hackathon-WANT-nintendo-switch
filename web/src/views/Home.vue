@@ -112,15 +112,23 @@ export default {
     },
   },
   created() {
-    this.getTokenSupply();
-    this.getTokenName();
+    this.updateBalances();
 
     bus.$on('deposit', (address, amount) => this.deposit(address, amount));
     bus.$on('redeem', (amount) => this.redeem(amount));
   },
   methods: {
-    async getTokenSupply() {
-      this.tokenSupply = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'NumberOfTokens', this.sender,
+    async updateBalances() {
+      this.getWantBalance();
+      this.getPoolBalance();
+    },
+    async getWantBalance() {
+      const args = [`${this.sender}`];
+      this.wantBalance = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'balanceOf', this.sender,
+        this.apiKey, args);
+    },
+    async getPoolBalance() {
+      this.poolTokenCount = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'totalOwnedTokens', this.sender,
         this.apiKey);
     },
     async getTokenName() {
