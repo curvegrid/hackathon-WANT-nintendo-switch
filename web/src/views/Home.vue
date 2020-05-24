@@ -51,7 +51,13 @@
                 <v-card
                   flat
                 >
-                  <deposit />
+                  <deposit
+                    v-if="hexAddress != null"
+                    :contract="contract"
+                    :sender="sender"
+                    :want-address="hexAddress"
+                    :api-key="apiKey"
+                  />
                 </v-card>
               </v-tab-item>
               <v-tab-item
@@ -78,7 +84,6 @@
 import Deposit from '../components/Deposit.vue';
 import Redeem from '../components/Redeem.vue';
 
-
 export default {
   name: 'Home',
   components: {
@@ -97,6 +102,7 @@ export default {
     },
     contract: 'want',
     address: 'want_demo_v0',
+    hexAddress: null,
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
   computed: {
@@ -113,14 +119,19 @@ export default {
   },
   created() {
     this.updateBalances();
+    this.getHexAddress();
 
-    bus.$on('deposit', (address, amount) => this.deposit(address, amount));
+    bus.$on('update', () => this.updateBalances());
     bus.$on('redeem', (amount) => this.redeem(amount));
   },
   methods: {
     async updateBalances() {
       this.getWantBalance();
       this.getPoolBalance();
+    },
+    async getHexAddress() {
+      const res = await this.$root.$_cgutils.get(`/api/v0/chains/ethereum/addresses/${this.address}`, this.apiKey);
+      this.hexAddress = res.data.result.address;
     },
     async getWantBalance() {
       const args = [`${this.sender}`];
@@ -134,12 +145,6 @@ export default {
     async getTokenName() {
       this.tokenName = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'name', this.sender,
         this.apiKey);
-    },
-    async deposit(address, amount) {
-      const args = [`${address}`, `${amount}`];
-      // TODO: need to make the sender the user's active metamask account
-      await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'deposit', this.sender, this.$root.$_web3,
-        this.apiKey, args);
     },
     async redeem(amount) {
       const args = [`${amount}`];
