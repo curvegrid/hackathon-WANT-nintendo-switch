@@ -119,6 +119,10 @@ export default {
       type: String,
       required: true,
     },
+    acceptedTokens: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -129,12 +133,6 @@ export default {
       tokenAllowance: null,
       tokenBalance: null,
       payout: null,
-      acceptedTokens: {
-        ZRX: '0xddea378A6dDC8AfeC82C36E9b0078826bf9e68B6',
-        WBTC: '0x577D296678535e4903D59A4C929B718e1D575e0A',
-        USDC: '0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b',
-        DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
-      },
     };
   },
   computed: {

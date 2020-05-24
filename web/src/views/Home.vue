@@ -9,7 +9,15 @@
       <div>Your WANT Balance: {{ wantBalance }}</div>
       <v-spacer />
       <div>Number of Tokens in the Pool: {{ poolTokenCount }}</div>
+      <v-spacer />
+      <div v-if="claimCost">
+        Your next claim will cost {{ claimCost }} WANT tokens
+      </div>
     </v-banner>
+    <tokens-view
+      :tokens="tokens"
+      :total-tokens="poolTokenCount"
+    />
     <v-container>
       <v-row class="text-center">
         <v-col cols="12">
@@ -57,6 +65,7 @@
                     :sender="sender"
                     :want-address="hexAddress"
                     :api-key="apiKey"
+                    :accepted-tokens="tokenAddresses"
                   />
                 </v-card>
               </v-tab-item>
@@ -83,18 +92,30 @@
 <script>
 import Deposit from '../components/Deposit.vue';
 import Redeem from '../components/Redeem.vue';
+import TokensView from '../components/Tokens.vue';
 
 export default {
   name: 'Home',
   components: {
     Deposit,
     Redeem,
+    TokensView,
   },
   data: () => ({
     tab: 0,
     tokenName: '',
     wantBalance: 0,
     poolTokenCount: 0,
+    claimCost: null,
+    sender: null,
+
+    tokenAddresses: {
+      ZRX: '0xddea378A6dDC8AfeC82C36E9b0078826bf9e68B6',
+      WBTC: '0x577D296678535e4903D59A4C929B718e1D575e0A',
+      USDC: '0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b',
+      DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
+    },
+    tokens: [],
 
     redeemStatus: {
       successMessage: '',
@@ -105,11 +126,6 @@ export default {
     hexAddress: null,
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
   }),
-  computed: {
-    sender() {
-      return window.ethereum.selectedAddress;
-    },
-  },
   watch: {
     tab() {
       console.log('tab change');
@@ -118,8 +134,16 @@ export default {
     },
   },
   created() {
-    this.updateBalances();
-    this.getHexAddress();
+    const getSender = () => {
+      if (window.ethereum.selectedAddress) {
+        this.sender = window.ethereum.selectedAddress;
+        this.updateBalances();
+        this.getHexAddress();
+        return;
+      }
+      setTimeout(getSender, 500);
+    };
+    getSender();
 
     bus.$on('update', () => this.updateBalances());
     bus.$on('redeem', (amount) => this.redeem(amount));
@@ -128,6 +152,8 @@ export default {
     async updateBalances() {
       this.getWantBalance();
       this.getPoolBalance();
+      this.getClaimCost();
+      this.updateTokens();
     },
     async getHexAddress() {
       const res = await this.$root.$_cgutils.get(`/api/v0/chains/ethereum/addresses/${this.address}`, this.apiKey);
@@ -142,6 +168,10 @@ export default {
       this.poolTokenCount = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'totalOwnedTokens', this.sender,
         this.apiKey);
     },
+    async getClaimCost() {
+      this.claimCost = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'claimCost', this.sender,
+        this.apiKey);
+    },
     async getTokenName() {
       this.tokenName = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'name', this.sender,
         this.apiKey);
@@ -152,6 +182,19 @@ export default {
         this.apiKey, args);
       // TODO make this meaningful
       this.redeemStatus.successMessage = 'Congrats you earned 1 MANA!';
+    },
+
+    async updateTokens() {
+      const tokens = await Promise.all(Object.keys(this.tokenAddresses).map(async (tokenName) => {
+        const address = this.tokenAddresses[tokenName];
+        return { name: tokenName, address, amount: await this.getTokenBalance(address) };
+      }));
+      tokens.sort((a, b) => a.amount - b.amount);
+      this.tokens = tokens;
+    },
+    getTokenBalance(address) {
+      return this.$root.$_cgutils.callMethod(this.address, this.contract, 'ownedTokenAmount', this.sender,
+        this.apiKey, [address]);
     },
   },
 };
