@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <v-container>
     <h1>About this project</h1>
     <p>
       Lorem ipsum dolor sit amet consectetur, adipisicing elit.
@@ -8,5 +8,5 @@
       labore at totam a corporis quas itaque
       rerum.
     </p>
-  </div>
+  </v-container>
 </template>
