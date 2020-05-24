@@ -9,7 +9,7 @@
       Under the hood it uses <a
         href="https://uniswap.org/"
         target="_blank"
-      >Uniswap</a>.
+      >Uniswap</a> and <a href="https://curvegrid.com">Curvegrid's MultiBaas</a> Platform.
     </p>
   </v-container>
 </template>
