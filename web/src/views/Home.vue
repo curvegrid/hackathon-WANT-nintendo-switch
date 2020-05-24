@@ -76,8 +76,10 @@
                   flat
                 >
                   <redeem
-                    :success-message="redeemStatus.successMessage"
-                    :error-message="redeemStatus.errorMessage"
+                    :claim-cost="claimCost"
+                    :tokens="tokens"
+                    :balance="wantBalance"
+                    :redeem="redeem"
                   />
                 </v-card>
               </v-tab-item>
@@ -117,10 +119,6 @@ export default {
     },
     tokens: [],
 
-    redeemStatus: {
-      successMessage: '',
-      errorMessage: '',
-    },
     contract: 'want',
     address: 'want_demo_v0',
     hexAddress: null,
@@ -146,7 +144,6 @@ export default {
     getSender();
 
     bus.$on('update', () => this.updateBalances());
-    bus.$on('redeem', (amount) => this.redeem(amount));
   },
   methods: {
     async updateBalances() {
@@ -176,12 +173,10 @@ export default {
       this.tokenName = await this.$root.$_cgutils.callMethod(this.address, this.contract, 'name', this.sender,
         this.apiKey);
     },
-    async redeem(amount) {
-      const args = [`${amount}`];
+    async redeem() {
+      const args = [1];
       await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'claim', this.sender, this.$root.$_web3,
         this.apiKey, args);
-      // TODO make this meaningful
-      this.redeemStatus.successMessage = 'Congrats you earned 1 MANA!';
     },
 
     async updateTokens() {

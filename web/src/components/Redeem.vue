@@ -4,35 +4,26 @@
       <v-form
         @submit.prevent
       >
-        <v-row align="center">
-          <v-col
-            cols="12"
-            sm="3"
-          />
-          <v-col
-            cols="12"
-            sm="6"
-          >
-            <v-text-field
-              v-model="amount"
-              label="Amount of WANT"
-            />
-          </v-col>
-        </v-row>
-        <v-row class="text-center">
+        <v-row class="text-center headline">
           <v-col>
             <v-btn
+              v-if="sufficientBalance"
               color="primary"
-              :disabled="!fieldsCompleted"
-              @click="redeem()"
+              x-large
+              :loading="loading"
+              @click="doRedeem()"
             >
-              Redeem
+              Redeem {{ claimCost }} WANT tokens to get ONE {{ tokens[random].name }}?!
             </v-btn>
+            <div v-if="!sufficientBalance">
+              You have insufficient balance (<b>{{ balance }}</b> out of <b>{{ claimCost }}</b>
+              WANT tokens) to claim one {{ tokens[random].name }}... Deposit more?
+            </div>
           </v-col>
         </v-row>
       </v-form>
     </v-container>
-    <v-alert
+    <!-- <v-alert
       v-if="successMessage != ''"
       type="success"
       tile
@@ -45,38 +36,53 @@
       tile
     >
       {{ errorMessage }}
-    </v-alert>
+    </v-alert> -->
   </div>
 </template>
 
 <script>
 export default {
   props: {
-    successMessage: {
-      type: String,
+    claimCost: {
+      type: Number,
       required: true,
     },
-    errorMessage: {
-      type: String,
+    balance: {
+      type: Number,
+      required: true,
+    },
+    tokens: {
+      type: Array,
+      required: true,
+    },
+    redeem: {
+      type: Function,
       required: true,
     },
   },
   data() {
     return {
-      amount: 0,
+      random: 0,
+      loading: false,
     };
   },
   computed: {
     fieldsCompleted() {
       return this.amount > 0;
     },
+    sufficientBalance() {
+      return this.balance >= this.claimCost;
+    },
+  },
+  created() {
+    setInterval(() => { this.random = (this.random + 1) % this.tokens.length; }, 1000);
   },
   methods: {
-    redeem() {
-      if (this.fieldsCompleted) {
-        bus.$emit('redeem', this.amount);
-        this.amount = 0;
-      }
+    async doRedeem() {
+      this.loading = true;
+      await this.redeem();
+      bus.$emit('update');
+      this.loading = false;
     },
   },
 };
