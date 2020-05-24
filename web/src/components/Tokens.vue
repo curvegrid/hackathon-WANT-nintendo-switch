@@ -15,7 +15,6 @@
                 </v-col>
                 <v-spacer />
                 <v-col
-                  v-container
                   class="col-auto"
                 >
                   {{ totalTokens === 0 ? 'None' :

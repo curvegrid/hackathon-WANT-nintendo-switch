@@ -69,11 +69,13 @@ export default {
             txHash = txResponse.hash;
           }
 
-          await this.waitForTransactionConfirmation(txHash, web3);
+          const receipt = await this.waitForTransactionConfirmation(txHash, web3);
 
           console.log(response.data.result);
+          return receipt;
         } catch (e) {
           console.warn(e);
+          return null;
         }
       },
       async waitForTransactionConfirmation(txHash, web3) {
@@ -89,6 +91,7 @@ export default {
           }
         }
         console.log(txReceipt);
+        return txReceipt;
       },
       // formatEthersTx is used to prepare transactions received from the MultiBaas API
       // for submission on the frontend by ethers.js

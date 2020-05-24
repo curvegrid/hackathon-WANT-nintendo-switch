@@ -23,20 +23,6 @@
         </v-row>
       </v-form>
     </v-container>
-    <!-- <v-alert
-      v-if="successMessage != ''"
-      type="success"
-      tile
-    >
-      {{ successMessage }}
-    </v-alert>
-    <v-alert
-      v-if="errorMessage != ''"
-      type="error"
-      tile
-    >
-      {{ errorMessage }}
-    </v-alert> -->
   </div>
 </template>
 
@@ -59,11 +45,16 @@ export default {
       type: Function,
       required: true,
     },
+    getEventsFromTxHash: {
+      type: Function,
+      required: true,
+    },
   },
   data() {
     return {
       random: 0,
       loading: false,
+      successMessage: null,
     };
   },
   computed: {
@@ -79,10 +70,27 @@ export default {
   },
   methods: {
     async doRedeem() {
+      bus.$emit('hide-message');
       this.loading = true;
-      await this.redeem();
+      const receipt = await this.redeem();
       bus.$emit('update');
       this.loading = false;
+      const getEvents = async () => {
+        const res = await this.getEventsFromTxHash(receipt.transactionHash, 'Claim');
+        if (res.length === 0) {
+          // sleep
+          await (new Promise((resolve) => setTimeout(resolve, 500)));
+          return getEvents();
+        }
+        return res;
+      };
+      const events = await getEvents();
+      const token = this.tokenFromAddress(events[0].event.inputs[2].value);
+      bus.$emit('message', `Congratuations! You have received ONE ${token.name} 🎉🎉🎉`);
+    },
+
+    tokenFromAddress(address) {
+      return this.tokens.find((v) => v.address === address);
     },
   },
 };

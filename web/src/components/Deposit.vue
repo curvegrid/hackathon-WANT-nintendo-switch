@@ -49,7 +49,7 @@
             @click="deposit()"
           >
             Deposit and Get
-            {{ payout === null ? '???' : payout }} WANT token!
+            {{ payout === null ? '???' : payout }} WANT tokens!
           </v-btn>
           <v-btn
             v-if="needsApproval && transactionStatus === null"
@@ -58,7 +58,7 @@
             @click="approve()"
           >
             Approve {{ amount }} {{ selectedToken }} to Get
-            {{ payout === null ? '???' : payout }} WANT token!
+            {{ payout === null ? '???' : payout }} WANT tokens!
           </v-btn>
           <v-btn
             v-if="transactionStatus !== null"

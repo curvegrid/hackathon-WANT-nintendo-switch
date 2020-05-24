@@ -16,7 +16,7 @@
     </v-banner>
     <tokens-view
       :tokens="tokens"
-      :total-tokens="poolTokenCount"
+      :total-tokens="Number(poolTokenCount)"
     />
     <v-container>
       <v-row class="text-center">
@@ -76,10 +76,11 @@
                   flat
                 >
                   <redeem
-                    :claim-cost="claimCost"
+                    :claim-cost="Number(claimCost)"
                     :tokens="tokens"
-                    :balance="wantBalance"
+                    :balance="Number(wantBalance)"
                     :redeem="redeem"
+                    :get-events-from-tx-hash="getEventsFromTxHash"
                   />
                 </v-card>
               </v-tab-item>
@@ -87,6 +88,19 @@
           </v-col>
         </v-row>
       </v-card>
+
+      <v-row>
+        <v-col cols="12">
+          <v-alert
+            v-model="showMessage"
+            dismissible
+            class="text-center headline"
+            type="success"
+          >
+            {{ message }}
+          </v-alert>
+        </v-col>
+      </v-row>
     </v-container>
   </div>
 </template>
@@ -123,12 +137,13 @@ export default {
     address: 'want_demo_v0',
     hexAddress: null,
     apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1OTAwMjM2NjcsInN1YiI6IjEifQ.dOD6AydCrB0yLuN8A3wnpJlWBpd7L8XVwiZGoAV0jzU',
+
+    showMessage: false,
+    message: '',
   }),
   watch: {
     tab() {
       console.log('tab change');
-      this.$set(this.redeemStatus, 'successMessage', '');
-      this.$set(this.redeemStatus, 'errorMessage', '');
     },
   },
   created() {
@@ -144,6 +159,11 @@ export default {
     getSender();
 
     bus.$on('update', () => this.updateBalances());
+    bus.$on('message', (message) => {
+      this.showMessage = true;
+      this.message = message;
+    });
+    bus.$on('hide-message', () => { this.showMessage = false; });
   },
   methods: {
     async updateBalances() {
@@ -175,8 +195,12 @@ export default {
     },
     async redeem() {
       const args = [1];
-      await this.$root.$_cgutils.sendMethod(this.address, this.contract, 'claim', this.sender, this.$root.$_web3,
+      return this.$root.$_cgutils.sendMethod(this.address, this.contract, 'claim', this.sender, this.$root.$_web3,
         this.apiKey, args);
+    },
+    async getEventsFromTxHash(hash, name) {
+      const res = await this.$root.$_cgutils.get(`/api/v0/chains/ethereum/addresses/${this.address}/events?tx_hash=${hash}&name=${name}`, this.apiKey);
+      return res.data.result;
     },
 
     async updateTokens() {
