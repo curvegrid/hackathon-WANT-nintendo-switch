@@ -4,79 +4,94 @@
       <v-form
         @submit.prevent
       >
-        <v-row align="center">
-          <v-col
-            cols="12"
-            sm="3"
-          />
-          <v-col
-            cols="12"
-            sm="6"
-          >
-            <v-text-field
-              v-model="amount"
-              label="Amount of WANT"
-            />
-          </v-col>
-        </v-row>
-        <v-row class="text-center">
+        <v-row class="text-center headline">
           <v-col>
             <v-btn
+              v-if="sufficientBalance"
               color="primary"
-              :disabled="!fieldsCompleted"
-              @click="redeem()"
+              x-large
+              width="60%"
+              :loading="loading"
+              @click="doRedeem()"
             >
-              Redeem
+              Redeem {{ claimCost }} WANT tokens to get ONE {{ tokens[random].name }}?!
             </v-btn>
+            <div v-if="!sufficientBalance">
+              You have insufficient balance (<b>{{ balance }}</b> out of <b>{{ claimCost }}</b>
+              WANT tokens) to claim one {{ tokens[random].name }}... Deposit more?
+            </div>
           </v-col>
         </v-row>
       </v-form>
     </v-container>
-    <v-alert
-      v-if="successMessage != ''"
-      type="success"
-      tile
-    >
-      {{ successMessage }}
-    </v-alert>
-    <v-alert
-      v-if="errorMessage != ''"
-      type="error"
-      tile
-    >
-      {{ errorMessage }}
-    </v-alert>
   </div>
 </template>
 
 <script>
 export default {
   props: {
-    successMessage: {
-      type: String,
+    claimCost: {
+      type: Number,
       required: true,
     },
-    errorMessage: {
-      type: String,
+    balance: {
+      type: Number,
+      required: true,
+    },
+    tokens: {
+      type: Array,
+      required: true,
+    },
+    redeem: {
+      type: Function,
+      required: true,
+    },
+    getEventsFromTxHash: {
+      type: Function,
       required: true,
     },
   },
   data() {
     return {
-      amount: 0,
+      random: 0,
+      loading: false,
+      successMessage: null,
     };
   },
   computed: {
     fieldsCompleted() {
       return this.amount > 0;
     },
+    sufficientBalance() {
+      return this.balance >= this.claimCost;
+    },
+  },
+  created() {
+    setInterval(() => { this.random = (this.random + 1) % this.tokens.length; }, 1000);
   },
   methods: {
-    redeem() {
-      if (this.fieldsCompleted) {
-        bus.$emit('redeem', this.amount);
-        this.amount = 0;
-      }
+    async doRedeem() {
+      bus.$emit('hide-message');
+      this.loading = true;
+      const receipt = await this.redeem();
+      bus.$emit('update');
+      this.loading = false;
+      const getEvents = async () => {
+        const res = await this.getEventsFromTxHash(receipt.transactionHash, 'Claim');
+        if (res.length === 0) {
+          // sleep
+          await (new Promise((resolve) => setTimeout(resolve, 500)));
+          return getEvents();
+        }
+        return res;
+      };
+      const events = await getEvents();
+      const token = this.tokenFromAddress(events[0].event.inputs[2].value);
+      bus.$emit('message', `Congratuations! You have received ONE ${token.name} 🎉🎉🎉`);
+    },
+
+    tokenFromAddress(address) {
+      return this.tokens.find((v) => v.address === address);
     },
   },
 };
