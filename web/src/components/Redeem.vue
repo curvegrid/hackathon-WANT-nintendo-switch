@@ -10,6 +10,7 @@
               v-if="sufficientBalance"
               color="primary"
               x-large
+              width="60%"
               :loading="loading"
               @click="doRedeem()"
             >
