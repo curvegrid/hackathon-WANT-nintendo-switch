@@ -143,7 +143,6 @@ export default {
   }),
   watch: {
     tab() {
-      console.log('tab change');
     },
   },
   created() {
